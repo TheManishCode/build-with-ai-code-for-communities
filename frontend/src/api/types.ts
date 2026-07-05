@@ -1,3 +1,11 @@
+export interface SourceQuote {
+  submission_id: number
+  village: string | null
+  original_text: string
+  original_language: string
+  translated_text: string | null
+}
+
 export interface Work {
   work_id: string
   source: 'issue' | 'gap'
@@ -10,6 +18,7 @@ export interface Work {
   population_affected: number | null
   composite_score: number
   reasoning: string
+  source_quotes: SourceQuote[]
 }
 
 export interface Village {

@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_db
 from app.core.ranking_config import ranking_config
 from app.services.letter import generate_draft_letter
+from app.services.quotes import get_source_quotes
 from app.services.ranking import build_ranked_works
 
 router = APIRouter(prefix="/works", tags=["works"])
@@ -33,6 +34,7 @@ def list_ranked_works(db: Session = Depends(get_db), limit: int = Query(20, ge=1
             "population_affected": w.population_affected,
             "composite_score": round(w.composite_score, 4),
             "reasoning": w.reasoning,
+            "source_quotes": get_source_quotes(db, w),
         }
         for w in works[:limit]
     ]

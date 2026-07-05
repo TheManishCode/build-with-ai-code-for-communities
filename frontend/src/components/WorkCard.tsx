@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import type { Work } from '../api/types'
 
 const THEME_COLORS: Record<string, string> = {
@@ -13,6 +14,8 @@ const THEME_COLORS: Record<string, string> = {
 export function WorkCard({ work, onDraftLetter }: { work: Work; onDraftLetter: (workId: string) => void }) {
   const themeClass = THEME_COLORS[work.theme] ?? THEME_COLORS.other
   const scorePct = Math.round(work.composite_score * 100)
+  const [showQuotes, setShowQuotes] = useState(false)
+  const hasQuotes = work.source_quotes.length > 0
 
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
@@ -41,13 +44,43 @@ export function WorkCard({ work, onDraftLetter }: { work: Work; onDraftLetter: (
           <span>{work.corroboration_count} report{work.corroboration_count === 1 ? '' : 's'}</span>
           {work.population_affected != null && <span>{work.population_affected.toLocaleString()} people affected</span>}
         </div>
-        <button
-          onClick={() => onDraftLetter(work.work_id)}
-          className="rounded-md bg-gray-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-gray-700 dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-white"
-        >
-          Generate draft letter
-        </button>
+        <div className="flex gap-2">
+          {hasQuotes && (
+            <button
+              onClick={() => setShowQuotes((v) => !v)}
+              className="rounded-md border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+            >
+              {showQuotes ? 'Hide' : 'In their words'} ({work.source_quotes.length})
+            </button>
+          )}
+          <button
+            onClick={() => onDraftLetter(work.work_id)}
+            className="rounded-md bg-gray-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-gray-700 dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-white"
+          >
+            Generate draft letter
+          </button>
+        </div>
       </div>
+
+      {showQuotes && hasQuotes && (
+        <div className="mt-3 flex flex-col gap-2 border-t border-gray-100 pt-3 dark:border-gray-700">
+          {work.source_quotes.map((q) => (
+            <div key={q.submission_id} className="rounded-md bg-gray-50 p-2.5 text-xs dark:bg-gray-900">
+              <p className="italic text-gray-700 dark:text-gray-300">
+                "{q.original_text}"
+                <span className="ml-1 not-italic text-gray-400">({q.original_language})</span>
+              </p>
+              {q.original_language !== 'en' && q.translated_text && (
+                <p className="mt-1 text-gray-500">Translated: "{q.translated_text}"</p>
+              )}
+              <p className="mt-1 text-gray-400">
+                Submission #{q.submission_id}
+                {q.village ? ` · ${q.village}` : ''}
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
