@@ -119,6 +119,22 @@ def test_reasoning_mplads_amount_matches_village_fact(db, works):
     assert checked > 0, "no works with an actual MPLADs amount were found to check"
 
 
+def test_electricity_gap_is_mostly_unavailable_not_fabricated(gaps):
+    """Documents a real source-data limitation (see app/services/gap.py
+    _raw_electricity_gap docstring): the census 'Power Supply For Domestic Use' column is
+    filled for essentially 1 of 624 Bagalkot villages. This asserts the code's correct
+    response -- returning None for the vast majority rather than defaulting blank-to-0-hours
+    (which would fabricate a maximal false gap) or blank-to-24-hours (which would fabricate
+    a false non-gap). If this ever starts returning real values for most villages, the
+    source data has improved and this test (and the docstring) should be revisited."""
+    non_null = sum(1 for g in gaps.values() if g.raw.get("electricity") is not None)
+    assert non_null <= 5, (
+        f"expected electricity gap data to be present for ~1 village (known source-data "
+        f"gap), found {non_null} -- if the source file was updated, update the docstring "
+        f"in app/services/gap.py::_raw_electricity_gap and this test's threshold"
+    )
+
+
 def test_silent_need_flag_requires_high_gap_and_low_voice(db):
     result = compute_village_divergence(db)
     for v in result.values():

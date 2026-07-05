@@ -64,6 +64,15 @@ def _raw_health_gap(row) -> float | None:
 
 
 def _raw_electricity_gap(row) -> float | None:
+    """KNOWN DATA GAP: the source census "Power Supply For Domestic Use" hours/status
+    columns are filled for only 1 of 624 Bagalkot villages (verified: domestic_power_supply
+    is TRUE for just 1 row, vs 77% for water and 96% for road status flags on the same
+    sheet) -- this looks like the column was largely left blank in the census handbook
+    itself, not that 623 villages genuinely lack electricity. Returning None (rather than
+    treating blank as "no supply") means these villages correctly get gap_percentile=None
+    for electricity and their composite score falls back to the demand signal alone for
+    that theme -- do NOT "fix" this by imputing a value; there is no real signal to impute.
+    """
     hours = [h for h in (row.domestic_power_hours_summer, row.domestic_power_hours_winter) if h is not None]
     if not hours:
         return None
