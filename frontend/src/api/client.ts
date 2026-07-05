@@ -3,6 +3,7 @@ import type {
   AllocationResponse,
   BacktestResponse,
   BoundaryResponse,
+  CitizenStatusResponse,
   DivergenceRow,
   DraftLetterResponse,
   ExplanationResponse,
@@ -29,4 +30,6 @@ export const api = {
     client
       .get<ExplanationResponse>(`/works/${encodeURIComponent(workId)}/explain`, { params: budget != null ? { budget } : {} })
       .then((r) => r.data),
+  citizenStatus: (submissionId: number) =>
+    client.get<CitizenStatusResponse>('/citizen/status', { params: { submission_id: submissionId } }).then((r) => r.data),
 }

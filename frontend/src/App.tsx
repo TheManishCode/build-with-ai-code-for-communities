@@ -3,14 +3,16 @@ import { MapView } from './components/MapView'
 import { WorksList } from './components/WorksList'
 import { BudgetSimulator } from './components/BudgetSimulator'
 import { BacktestPanel } from './components/BacktestPanel'
+import { CitizenStatusLookup } from './components/CitizenStatusLookup'
 
-type Tab = 'map' | 'works' | 'budget' | 'backtest'
+type Tab = 'map' | 'works' | 'budget' | 'backtest' | 'status'
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'works', label: 'Ranked Priorities' },
   { id: 'map', label: 'Map' },
   { id: 'budget', label: 'Budget Simulator' },
   { id: 'backtest', label: 'Backtest' },
+  { id: 'status', label: 'Check My Report' },
 ]
 
 function App() {
@@ -45,6 +47,7 @@ function App() {
         {tab === 'map' && <MapView />}
         {tab === 'budget' && <BudgetSimulator />}
         {tab === 'backtest' && <BacktestPanel />}
+        {tab === 'status' && <CitizenStatusLookup />}
       </main>
     </div>
   )

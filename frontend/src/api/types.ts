@@ -119,6 +119,20 @@ export interface ExplanationResponse {
   fallback_reason?: string | null
 }
 
+export interface CitizenStatusResponse {
+  submission_id: number
+  village: string | null
+  taluk: string | null
+  theme: string | null
+  dedup_group_id: number | null
+  corroboration_count: number | null
+  current_rank: number | null
+  total_works_ranked: number | null
+  is_funded_this_cycle: boolean | null
+  funding_tier: string
+  status_message: string
+}
+
 export interface Issue {
   id: number
   theme: string
