@@ -1,0 +1,35 @@
+# Composite ranking weights (Phase 3). Demand + gap signals are each normalized to
+# [0, 1] (percentile within the constituency) before weighting, so these weights are
+# directly comparable. Tune here — never hardcode weights in scoring code.
+
+demand_weight: 0.5 # citizen-voice signal (corroboration count, recency-weighted)
+gap_weight: 0.5 # objective infrastructure-gap signal (vs district/state average)
+
+# Recency half-life for demand-signal decay, in days. A submission this old counts
+# for half its original weight in the corroboration count.
+recency_half_life_days: 60
+
+# Per-theme sub-weights within the objective gap signal (must sum to 1.0 across
+# whichever themes are present for a given village).
+gap_sub_weights:
+  water: 0.30
+  road: 0.25
+  school: 0.20
+  health: 0.15
+  electricity: 0.10
+
+# Tie-break, when composite scores are within this epsilon of each other, higher
+# population-affected wins.
+tie_break_epsilon: 0.01
+
+# Per-theme flat cost heuristic (INR) used by the Phase 5 budget allocator when no
+# real per-work cost estimate exists. These are rough MPLADs-scale planning figures,
+# not engineering estimates — stated explicitly per the project's non-negotiables.
+theme_cost_heuristic:
+  water: 500000
+  road: 2500000
+  school: 1000000
+  health: 1500000
+  electricity: 800000
+  sanitation: 400000
+  other: 500000
