@@ -19,7 +19,9 @@ assuming completeness -- run it and read the printed report before trusting the 
 
 from __future__ import annotations
 
+from geoalchemy2.shape import from_shape
 from rapidfuzz import fuzz, process, utils
+from shapely import wkb
 from sqlalchemy import text
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
@@ -81,7 +83,7 @@ def _connectivity_and_geom(db: Session, hab_matches: dict[int, dict]) -> dict[in
         ),
         {"cats": list(CONNECTED_ROAD_CATEGORIES), "buf": CONNECTIVITY_BUFFER_M, "ids": hab_ids},
     ).all()
-    by_hab = {r.hab_id: {"geom": bytes(r.geom), "connected": r.connected} for r in rows}
+    by_hab = {r.hab_id: {"geom": from_shape(wkb.loads(bytes(r.geom)), srid=4326), "connected": r.connected} for r in rows}
 
     out: dict[int, dict] = {}
     for village_code, m in hab_matches.items():
