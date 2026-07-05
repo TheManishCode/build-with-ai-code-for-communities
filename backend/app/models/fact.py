@@ -51,6 +51,10 @@ class VillageFact(Base):
     # Health
     health_facility_count: Mapped[int | None] = mapped_column(Integer)
 
+    # Sanitation (census_village_amenities drainage status flags)
+    has_closed_drainage: Mapped[bool | None] = mapped_column(Boolean)
+    has_no_drainage: Mapped[bool | None] = mapped_column(Boolean)
+
     # Water (census_village_amenities status flags — proxy for the unavailable JJM FHTC%)
     has_treated_tap_water: Mapped[bool | None] = mapped_column(Boolean)
     has_safe_water_source: Mapped[bool | None] = mapped_column(Boolean)  # tap/hand-pump/tube-well/covered-well
