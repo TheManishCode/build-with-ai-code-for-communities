@@ -41,7 +41,7 @@ class Submission(Base):
     translated_text: Mapped[str | None] = mapped_column(Text)
     theme: Mapped[Theme] = mapped_column(Enum(Theme, name="theme_enum"))
     place_text: Mapped[str | None] = mapped_column(String(256))  # raw place mention extracted from text
-    resolved_village_code: Mapped[int | None] = mapped_column(ForeignKey("lgd_village.village_code"))
+    resolved_lgd_code: Mapped[int | None] = mapped_column(ForeignKey("lgd_village.village_code"))
     place_match_score: Mapped[float | None] = mapped_column(Float)
     lat: Mapped[float | None] = mapped_column(Float)
     lng: Mapped[float | None] = mapped_column(Float)
@@ -58,7 +58,7 @@ class Issue(Base):
     __tablename__ = "issue"
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    theme: Mapped[Theme] = mapped_column(Enum(Theme, name="theme_enum_issue"))
+    theme: Mapped[Theme] = mapped_column(Enum(Theme, name="theme_enum"))
     village_code: Mapped[int | None] = mapped_column(ForeignKey("lgd_village.village_code"))
     representative_text: Mapped[str] = mapped_column(Text)
     corroboration_count: Mapped[int] = mapped_column(default=1)

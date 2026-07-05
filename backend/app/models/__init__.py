@@ -5,6 +5,7 @@ from app.models.lgd import LGDBlock, LGDDistrict, LGDLocalBody, LGDSubdistrict, 
 from app.models.mplads import MPLADsAllocatedLimit, MPLADsExpenditure, MPLADsWork
 from app.models.pmgsy import PMGSYHabitation, PMGSYRoadDRRP, PMGSYRoadProposal
 from app.models.schools import KnowYourSchool
+from app.models.submission import Channel, Issue, Submission, Theme
 
 __all__ = [
     "LGDDistrict",
@@ -24,4 +25,8 @@ __all__ = [
     "PMGSYRoadProposal",
     "PMGSYRoadDRRP",
     "KnowYourSchool",
+    "Channel",
+    "Theme",
+    "Submission",
+    "Issue",
 ]

@@ -19,5 +19,9 @@ rapidfuzz
 scikit-learn
 numpy
 
+sentence-transformers
+deep-translator
+pyyaml
+
 pytest
 httpx
