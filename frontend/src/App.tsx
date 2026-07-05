@@ -4,8 +4,9 @@ import { WorksList } from './components/WorksList'
 import { BudgetSimulator } from './components/BudgetSimulator'
 import { BacktestPanel } from './components/BacktestPanel'
 import { CitizenStatusLookup } from './components/CitizenStatusLookup'
+import { TransparencyDashboard } from './components/TransparencyDashboard'
 
-type Tab = 'map' | 'works' | 'budget' | 'backtest' | 'status'
+type Tab = 'map' | 'works' | 'budget' | 'backtest' | 'status' | 'transparency'
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'works', label: 'Ranked Priorities' },
@@ -13,6 +14,7 @@ const TABS: { id: Tab; label: string }[] = [
   { id: 'budget', label: 'Budget Simulator' },
   { id: 'backtest', label: 'Backtest' },
   { id: 'status', label: 'Check My Report' },
+  { id: 'transparency', label: 'Transparency' },
 ]
 
 function App() {
@@ -48,6 +50,7 @@ function App() {
         {tab === 'budget' && <BudgetSimulator />}
         {tab === 'backtest' && <BacktestPanel />}
         {tab === 'status' && <CitizenStatusLookup />}
+        {tab === 'transparency' && <TransparencyDashboard />}
       </main>
     </div>
   )

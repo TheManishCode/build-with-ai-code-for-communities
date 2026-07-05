@@ -119,6 +119,26 @@ export interface ExplanationResponse {
   fallback_reason?: string | null
 }
 
+export interface TransparencySummaryResponse {
+  total_submissions: number
+  total_issues: number
+  dedup_rate: number
+  theme_breakdown: Record<string, number>
+  total_villages: number
+  villages_with_submissions: number
+  voice_coverage_pct: number
+  silent_need_village_count: number
+  total_candidate_works: number
+  issue_based_works: number
+  gap_only_works: number
+  budget: number
+  works_funded: number
+  budget_used_pct: number
+  backtest_ground_truth_villages: number
+  backtest_precision_at_100: number | null
+  backtest_never_addressed_count: number
+}
+
 export interface CitizenStatusResponse {
   submission_id: number
   village: string | null

@@ -8,6 +8,7 @@ import type {
   DraftLetterResponse,
   ExplanationResponse,
   Issue,
+  TransparencySummaryResponse,
   Village,
   Work,
 } from './types'
@@ -32,4 +33,5 @@ export const api = {
       .then((r) => r.data),
   citizenStatus: (submissionId: number) =>
     client.get<CitizenStatusResponse>('/citizen/status', { params: { submission_id: submissionId } }).then((r) => r.data),
+  transparencySummary: () => client.get<TransparencySummaryResponse>('/transparency/summary').then((r) => r.data),
 }
