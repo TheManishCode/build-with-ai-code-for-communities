@@ -12,11 +12,18 @@ recency_half_life_days: 60
 # Per-theme sub-weights within the objective gap signal (must sum to 1.0 across
 # whichever themes are present for a given village).
 gap_sub_weights:
-  water: 0.30
-  road: 0.25
-  school: 0.20
+  water: 0.25
+  road: 0.20
+  school: 0.15
   health: 0.15
   electricity: 0.10
+  sanitation: 0.15
+  # "other" has no fact-table gap signal (it's a catch-all theme with no objective proxy) --
+  # other-themed candidate works are scored on the demand signal alone (gap contribution 0).
+
+# Gap percentile threshold (within Bagalkot) above which a village/theme combination with
+# ZERO citizen submissions is still surfaced as a "silent need" gap-only candidate work.
+silent_need_gap_percentile: 0.75
 
 # Tie-break, when composite scores are within this epsilon of each other, higher
 # population-affected wins.
