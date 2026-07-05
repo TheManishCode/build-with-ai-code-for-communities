@@ -180,6 +180,13 @@ def build_ranked_works(db: Session, config: RankingConfig = ranking_config, now:
     # Gap-only "silent need" candidates: village/theme combos with no issue at all, whose
     # gap percentile clears the configured threshold.
     for village_code, gap in gaps.items():
+        # Guard against a real data artifact: a handful of villages show
+        # total_population==0 in census_village_amenities despite LGD marking them
+        # "Inhabitant" (likely a hamlet/main-village split in the census table, not a
+        # genuinely empty settlement) -- recommending funding based on a spurious
+        # zero-population read would be misleading, so skip gap-only candidates for them.
+        if not gap.total_population:
+            continue
         for theme in THEMES_WITH_GAP_SIGNAL:
             if (village_code, theme) in covered:
                 continue
