@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.allocation import router as allocation_router
 from app.api.backtest import router as backtest_router
+from app.api.boundary import router as boundary_router
 from app.api.divergence import router as divergence_router
 from app.api.issues import router as issues_router
 from app.api.villages import router as villages_router
@@ -24,6 +25,7 @@ app.include_router(works_router)
 app.include_router(divergence_router)
 app.include_router(backtest_router)
 app.include_router(allocation_router)
+app.include_router(boundary_router)
 
 
 @app.get("/health")
