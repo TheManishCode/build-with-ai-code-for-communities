@@ -101,6 +101,24 @@ export interface DraftLetterResponse {
   generated_at: string
 }
 
+export interface ExplanationResponse {
+  work_id: string
+  is_funded: boolean
+  theme?: string
+  village_name?: string | null
+  composite_score?: number
+  demand_percentile?: number
+  gap_percentile?: number | null
+  cost?: number | null
+  cutoff_score?: number
+  cutoff_caveat?: string
+  compared_against?: Array<{ village_name: string | null; theme: string; composite_score: number; cost: number }>
+  mp_explanation?: string
+  citizen_message?: string
+  generation_source?: 'nvidia' | 'claude' | 'template'
+  fallback_reason?: string | null
+}
+
 export interface Issue {
   id: number
   theme: string

@@ -10,6 +10,13 @@ class Settings(BaseSettings):
     dataset_dir: Path
     constituency_name: str = "BAGALKOT"
     constituency_district: str = "Bagalkot"
+    anthropic_api_key: str | None = None  # Phase 8 backup model -- explain() falls back to a
+    # template explanation whenever no key succeeds, same as any other generation failure.
+    nvidia_nim_api_key: str | None = None  # Phase 8 primary/base model (NVIDIA NIM, OpenAI-
+    # compatible API surface), tried before the Anthropic backup.
+    nvidia_model: str = "nvidia/nemotron-3-ultra-550b-a55b"  # NVIDIA's flagship (550B) --
+    # verified callable for this account; "nvidia/llama-3.1-nemotron-70b-instruct" is listed
+    # in the catalog but returns 404 "Function not found for account" when actually called.
 
 
 settings = Settings()

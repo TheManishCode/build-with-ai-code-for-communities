@@ -22,6 +22,8 @@ numpy
 sentence-transformers
 deep-translator
 pyyaml
+anthropic
+openai
 
 pytest
 httpx

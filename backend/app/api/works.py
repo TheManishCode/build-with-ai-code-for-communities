@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
 from app.core.ranking_config import ranking_config
+from app.services.explain import explain_work
 from app.services.letter import generate_draft_letter
 from app.services.quotes import get_source_quotes
 from app.services.ranking import build_ranked_works
@@ -16,6 +17,15 @@ def _current_mp_name(db: Session) -> str:
         text("SELECT mp_name FROM mplads_allocated_limit WHERE lok_sabha_term='18th' ORDER BY id LIMIT 1")
     ).first()
     return row.mp_name if row else "Member of Parliament"
+
+
+def _default_mplads_budget(db: Session) -> int:
+    """Duplicated from app.api.allocation._default_budget rather than imported, so Phase 8
+    doesn't reach into an existing Phase 5 module's private helper."""
+    row = db.execute(
+        text("SELECT allocated_amount FROM mplads_allocated_limit WHERE lok_sabha_term = '18th' ORDER BY id LIMIT 1")
+    ).first()
+    return int(row.allocated_amount) if row else 0
 
 
 @router.get("")
@@ -53,3 +63,15 @@ def get_draft_letter(work_id: str, db: Session = Depends(get_db)) -> dict:
     cost_estimate = ranking_config.theme_cost_heuristic.get(work.theme)
     letter = generate_draft_letter(work, mp_name, settings.constituency_name, cost_estimate)
     return {"work_id": work_id, **letter}
+
+
+@router.get("/{work_id}/explain")
+def get_rejection_explanation(work_id: str, db: Session = Depends(get_db), budget: int | None = Query(None, ge=0)) -> dict:
+    """Explains why a work did/didn't make the budget allocator's cut (see
+    app.services.explain module docstring for the knapsack-cutoff caveat). Defaults to
+    Bagalkot's real current MPLADs limit, same as GET /allocation."""
+    effective_budget = budget if budget is not None else _default_mplads_budget(db)
+    result = explain_work(db, work_id, effective_budget)
+    if result is None:
+        raise HTTPException(status_code=404, detail=f"work_id {work_id!r} not found in current ranking")
+    return result

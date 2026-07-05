@@ -5,6 +5,7 @@ import type {
   BoundaryResponse,
   DivergenceRow,
   DraftLetterResponse,
+  ExplanationResponse,
   Issue,
   Village,
   Work,
@@ -24,4 +25,8 @@ export const api = {
     client.get<AllocationResponse>('/allocation', { params: budget != null ? { budget } : {} }).then((r) => r.data),
   backtest: () => client.get<BacktestResponse>('/backtest').then((r) => r.data),
   draftLetter: (workId: string) => client.get<DraftLetterResponse>(`/works/${encodeURIComponent(workId)}/letter`).then((r) => r.data),
+  explain: (workId: string, budget?: number) =>
+    client
+      .get<ExplanationResponse>(`/works/${encodeURIComponent(workId)}/explain`, { params: budget != null ? { budget } : {} })
+      .then((r) => r.data),
 }
