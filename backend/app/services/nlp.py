@@ -44,7 +44,7 @@ THEME_KEYWORDS: dict[Theme, list[str]] = {
     ],
     Theme.health: [
         "hospital", "clinic", "doctor", "phc", "health center", "health centre", "medicine",
-        "ambulance", "nurse",
+        "ambulance", "nurse", "emergency",
     ],
     Theme.electricity: [
         "power", "electricity", "current", "transformer", "streetlight", "street light",
@@ -82,8 +82,13 @@ def translate(raw_text: str, language: str) -> str:
 
 
 def classify_theme(translated_text: str) -> Theme:
+    """Score by keyword OCCURRENCE COUNT, not just presence — a text that says "garbage...
+    garbage piled up" should out-score an incidental single mention of a keyword from
+    another theme (e.g. "near the main road"), rather than an arbitrary tie resolved by
+    THEME_KEYWORDS dict order.
+    """
     lowered = translated_text.lower()
-    scores = {theme: sum(1 for kw in kws if kw in lowered) for theme, kws in THEME_KEYWORDS.items()}
+    scores = {theme: sum(lowered.count(kw) for kw in kws) for theme, kws in THEME_KEYWORDS.items()}
     best_theme, best_score = max(scores.items(), key=lambda kv: kv[1])
     return best_theme if best_score > 0 else Theme.other
 
