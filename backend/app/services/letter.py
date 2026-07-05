@@ -1,8 +1,7 @@
-"""Phase 6 step 4: auto-draft letter generator. Produces an actual formatted letter the
-MP's office could edit and send -- addressed to the real Karnataka department responsible
-for the work's theme, citing the same reasoning string (and therefore the same
-real-queried numbers) already verified in Phase 3, not a separate hallucination-prone
-text generation path.
+"""Auto-draft letter generator. Produces an actual formatted letter the MP's office could
+edit and send -- addressed to the real Karnataka department responsible for the work's
+theme, citing the same reasoning string (and therefore the same real-queried numbers) used
+in app.services.ranking, not a separate hallucination-prone text generation path.
 """
 
 from __future__ import annotations

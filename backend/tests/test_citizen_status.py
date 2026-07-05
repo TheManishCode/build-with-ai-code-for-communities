@@ -1,6 +1,6 @@
-"""Phase 9 (Citizen Status Loop) tests -- a template-filled status string, no model call,
-so the bar here is that every field traces to real DB/ranking state, same rigor as the
-other template-based generators in this project (build_reasoning, build_template_explanation).
+"""Citizen status lookup tests -- a template-filled status string, no model call, so the
+bar here is that every field traces to real DB/ranking state, same rigor as the other
+template-based generators in this project (build_reasoning, build_template_explanation).
 """
 
 from sqlalchemy import text

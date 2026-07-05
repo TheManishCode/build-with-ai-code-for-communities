@@ -1,5 +1,5 @@
-"""Cluster all submissions into deduplicated Issues (Phase 2 step 4) and link each
-submission back to its issue via submission.issue_id.
+"""Cluster all submissions into deduplicated Issues and link each submission back to its
+issue via submission.issue_id.
 
 Re-runnable: clears existing issues/links first so reruns don't accumulate duplicates.
 """

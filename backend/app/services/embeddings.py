@@ -1,4 +1,4 @@
-"""Sentence embeddings for submission dedup clustering (Phase 2 step 4).
+"""Sentence embeddings for submission dedup clustering (see app.services.dedup).
 
 Loaded lazily/once (module-level singleton) since the model load is the expensive part,
 not individual encode() calls.

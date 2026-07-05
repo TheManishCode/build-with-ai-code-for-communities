@@ -1,16 +1,15 @@
-"""Phase 8: Rejection Explainer.
+"""Rejection Explainer.
 
 For a work that did NOT make the budget allocator's cut, explain why -- to the MP's office
 (operational: scores, cutoff, budget math) and to the citizen who reported it (plain
-language). Generation goes through NVIDIA NIM first (base model, per user instruction) and
-falls back to Claude (backup) if NVIDIA is unavailable or its output fails verification.
-Per this project's numeric-verification requirement: every number the generated text cites
-is extracted and checked against the real structured values passed into the prompt. If
-BOTH providers fail (missing key, API error, or failed verification), we fall back to a
-deterministic template built directly from the same real values, grounded by construction
-the same way app.services.ranking.build_reasoning is.
+language). Generation goes through NVIDIA NIM first (base model) and falls back to Claude
+(backup) if NVIDIA is unavailable or its output fails verification. Every number the
+generated text cites is extracted and checked against the real structured values passed
+into the prompt. If BOTH providers fail (missing key, API error, or failed verification),
+this falls back to a deterministic template built directly from the same real values,
+grounded by construction the same way app.services.ranking.build_reasoning is.
 
-LIVE-VERIFIED (not just unit-tested with mocks) against the real APIs while building this:
+LIVE-VERIFIED (not just unit-tested with mocks) against the real APIs:
   - NVIDIA: the initially-chosen model ("nvidia/llama-3.1-nemotron-70b-instruct") is listed
     in the NIM catalog but returned 404 "Function not found for account" when actually
     called -- listed != deployed for a given account/key. Queried the account's real
@@ -53,10 +52,9 @@ NUMBER_RE = re.compile(r"-?\d[\d,]*\.?\d*")
 UNCHECKED_SMALL_INT_MAX = 3
 
 # Structural scale references that appear in ordinary phrasing about percentages/scores
-# ("scored 72 out of 100") without being a data citation themselves. Caught as a real
-# false-positive during Phase 8 verification (see test_explain.py
-# test_template_explanation_is_always_grounded) -- the template says "X out of 100" and the
-# literal 100 was flagged as ungrounded before this was added.
+# ("scored 72 out of 100") without being a data citation themselves. Without this, the
+# template's own "X out of 100" phrasing gets its literal 100 flagged as an ungrounded
+# number -- see test_explain.py::test_template_explanation_is_always_grounded.
 STRUCTURAL_NUMBERS = {100.0}
 
 

@@ -17,9 +17,8 @@ app = FastAPI(title="People's Priorities API")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origin_list,
-    # This API is currently 100% read-only GET (verified: every route in app/api/*.py is a
-    # @router.get) -- scoped to GET/HEAD/OPTIONS rather than "*" (tightened during a code
-    # quality/security audit). Widen this if a write endpoint is ever added.
+    # This API is currently 100% read-only GET (every route in app/api/*.py is a @router.get)
+    # -- scoped to GET/HEAD/OPTIONS rather than "*". Widen this if a write endpoint is ever added.
     allow_methods=["GET", "HEAD", "OPTIONS"],
     allow_headers=["*"],
 )

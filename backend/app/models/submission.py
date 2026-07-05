@@ -30,7 +30,11 @@ class Theme(str, enum.Enum):
 
 
 class Submission(Base):
-    """A single raw citizen development request (Phase 2)."""
+    """A single raw citizen development request. `channel` records how it arrived
+    (voice/text/photo), but there is currently no live intake pipeline behind any channel --
+    all rows today come from app.ingestion.seed_submissions, standing in for citizen input
+    until a real submission endpoint and per-channel processing (speech-to-text, image
+    handling, a messaging-app gateway) exist."""
 
     __tablename__ = "submission"
 
@@ -53,7 +57,7 @@ class Submission(Base):
 
 class Issue(Base):
     """A clustered/deduplicated issue — one row per group of near-duplicate submissions
-    describing the same underlying problem (Phase 2 step 4)."""
+    describing the same underlying problem. See app.services.dedup."""
 
     __tablename__ = "issue"
 

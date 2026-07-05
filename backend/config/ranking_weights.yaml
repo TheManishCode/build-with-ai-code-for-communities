@@ -1,6 +1,6 @@
-# Composite ranking weights (Phase 3). Demand + gap signals are each normalized to
-# [0, 1] (percentile within the constituency) before weighting, so these weights are
-# directly comparable. Tune here — never hardcode weights in scoring code.
+# Composite ranking weights. Demand + gap signals are each normalized to [0, 1]
+# (percentile within the constituency) before weighting, so these weights are directly
+# comparable. Tune here — never hardcode weights in scoring code.
 
 demand_weight: 0.5 # citizen-voice signal (corroboration count, recency-weighted)
 gap_weight: 0.5 # objective infrastructure-gap signal (vs district/state average)
@@ -29,9 +29,9 @@ silent_need_gap_percentile: 0.75
 # population-affected wins.
 tie_break_epsilon: 0.01
 
-# Per-theme flat cost heuristic (INR) used by the Phase 5 budget allocator when no
-# real per-work cost estimate exists. These are rough MPLADs-scale planning figures,
-# not engineering estimates — stated explicitly per the project's non-negotiables.
+# Per-theme flat cost heuristic (INR) used by the budget allocator when no real per-work
+# cost estimate exists. These are rough MPLADs-scale planning figures, not engineering
+# estimates — stated explicitly rather than hidden inside a black-box number.
 theme_cost_heuristic:
   water: 500000
   road: 2500000

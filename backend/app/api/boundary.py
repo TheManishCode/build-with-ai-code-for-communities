@@ -17,11 +17,11 @@ BAGALKOT_PC_ID = 2903
 @router.get("")
 def get_boundary(db: Session = Depends(get_db)) -> dict:
     """GeoJSON for the map view: the Bagalkot PC polygon, plus one point feature per
-    village that has a resolved location (88.2% of villages, per Phase 1 coverage --
-    villages without a matched PMGSY habitation point have no marker, not a guessed one).
+    village that has a resolved location (88.2% of villages -- villages without a matched
+    PMGSY habitation point have no marker, not a guessed one).
     Each village's `composite_score` is the MAX composite_score among its candidate works
-    (i.e. "how urgent is this village's top issue"); divergence/silent_need come from
-    Phase 3's need-vs-voice signal for the divergence overlay toggle.
+    (i.e. "how urgent is this village's top issue"); divergence/silent_need come from the
+    need-vs-voice signal used by the divergence overlay toggle.
     """
     pc_row = db.execute(
         text("SELECT pc_name, ST_AsGeoJSON(geom) AS geojson FROM pc_boundary WHERE pc_id = :id"),

@@ -1,4 +1,4 @@
-"""Composite ranking engine (Phase 3).
+"""Composite ranking engine.
 
 A "candidate work" is either:
   - an Issue (clustered citizen submissions) — has both a demand signal and, when its
@@ -58,9 +58,9 @@ def _compute_theme_medians(all_gaps: dict[int, VillageGap]) -> dict[str, float]:
     """Precomputed once per build_ranked_works() call and threaded through to every
     candidate's reasoning string -- these medians are the same number regardless of which
     candidate is asking, so recomputing them (a full ~627-village list comprehension +
-    sort) inside the per-candidate loop was pure redundant work. Caught during a code
-    quality/efficiency audit: for a request ranking ~689 candidates, this was re-sorting
-    the same ~627-element list hundreds of times over.
+    sort) inside the per-candidate loop would be pure redundant work: for a request ranking
+    ~689 candidates, that would mean re-sorting the same ~627-element list hundreds of
+    times over for an identical result.
     """
     medians: dict[str, float] = {}
     for theme in ("school", "health"):

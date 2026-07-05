@@ -1,6 +1,6 @@
-"""Real tests for the Phase 4 MPLADs backtest -- verifying the precision/recall
-ARITHMETIC is correct, not that the resulting numbers look impressive. See
-app/services/backtest.py's module docstring for the methodology and disclosed caveats.
+"""Real tests for the MPLADs backtest -- verifying the precision/recall ARITHMETIC is
+correct, not that the resulting numbers look impressive. See app/services/backtest.py's
+module docstring for the methodology and disclosed caveats.
 """
 
 from sqlalchemy import text

@@ -1,4 +1,4 @@
-"""Objective infrastructure-gap signal, computed from village_fact (Phase 3).
+"""Objective infrastructure-gap signal, computed from village_fact.
 
 For each theme with a fact-table proxy (water/road/school/health/electricity/sanitation),
 compute a RAW gap metric per village (higher = worse), then convert to a percentile rank

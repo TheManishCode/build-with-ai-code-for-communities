@@ -1,6 +1,5 @@
-"""Phase 10 (this session's own extension -- no spec was given for "Phase 10", the
-original instructions left it undefined pending a joint decision; interpreted here as a
-capstone tying Phases 1-9 together): a public-facing constituency transparency summary.
+"""A public-facing constituency transparency summary -- a capstone tying the rest of the
+platform together into one "what has this system actually done" view.
 
 Pure aggregation over already-tested services -- no new scoring logic, no LLM calls, no
 schema changes. Every number is read directly from the DB or from the same

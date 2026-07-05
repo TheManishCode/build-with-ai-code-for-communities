@@ -1,6 +1,6 @@
-"""Phase 10 (constituency transparency summary) tests -- pure aggregation, so the bar is
-that every number matches an independent fresh query/service call against the same real
-data, not a re-read of the summary's own internals."""
+"""Constituency transparency summary tests -- pure aggregation, so the bar is that every
+number matches an independent fresh query/service call against the same real data, not a
+re-read of the summary's own internals."""
 
 from sqlalchemy import text
 
@@ -22,7 +22,7 @@ def test_submission_and_issue_counts_match_raw_query(db):
 def test_dedup_rate_arithmetic():
     s_total, s_issues = 58, 39
     expected = 1 - (s_issues / s_total)
-    # sanity-check the formula itself against known real seed numbers (see Phase 2 summary)
+    # sanity-check the formula itself against known real seed numbers
     assert abs(expected - (1 - 39 / 58)) < 1e-9
 
 

@@ -1,5 +1,5 @@
-"""Phase 8 (Rejection Explainer) tests. The core requirement from the ground rules is the
-numeric-verification guardrail: generated text is only shipped if every number it cites
+"""Rejection Explainer tests. The core requirement is the numeric-verification guardrail:
+generated text is only shipped if every number it cites
 exists in the real structured input; otherwise a template fallback is used. These tests
 exercise that guardrail directly (both the "should pass" and "should catch fabrication"
 cases), the knapsack-cutoff/comparison logic against real data, and the actual behavior of

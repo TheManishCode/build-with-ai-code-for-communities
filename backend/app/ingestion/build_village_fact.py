@@ -1,4 +1,4 @@
-"""Materialize the single village-level fact table (Phase 1 step 4) for Bagalkot district.
+"""Materialize the single village-level fact table for Bagalkot district.
 
 Joins:
   - lgd_village (spine, district_code=524)

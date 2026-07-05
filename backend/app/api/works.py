@@ -20,8 +20,8 @@ def _current_mp_name(db: Session) -> str:
 
 
 def _default_mplads_budget(db: Session) -> int:
-    """Duplicated from app.api.allocation._default_budget rather than imported, so Phase 8
-    doesn't reach into an existing Phase 5 module's private helper."""
+    """Duplicated from app.api.allocation._default_budget rather than imported, so this
+    router doesn't reach into another module's private helper."""
     row = db.execute(
         text("SELECT allocated_amount FROM mplads_allocated_limit WHERE lok_sabha_term = '18th' ORDER BY id LIMIT 1")
     ).first()

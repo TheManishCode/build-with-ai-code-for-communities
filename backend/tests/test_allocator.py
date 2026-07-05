@@ -1,6 +1,6 @@
-"""Real tests for the Phase 5 knapsack budget allocator -- verify the optimization is
-actually correct (budget constraint respected, value-maximizing, deterministic), not just
-that it returns something plausible-looking."""
+"""Real tests for the knapsack budget allocator -- verify the optimization is actually
+correct (budget constraint respected, value-maximizing, deterministic), not just that it
+returns something plausible-looking."""
 
 from app.core.ranking_config import ranking_config
 from app.services.allocator import knapsack_allocate
@@ -72,11 +72,10 @@ def test_real_bagalkot_allocation_uses_real_ranked_works(db):
 
 
 def test_run_allocation_with_precomputed_candidates_matches_recomputing_them(db):
-    """Efficiency fix (code-quality audit): callers that already have build_ranked_works(db)
-    can pass it in via candidates= to avoid a redundant second full rebuild in the same
-    request (was happening on /works/{id}/explain, /citizen/status, /transparency/summary).
-    The result must be identical either way -- this isn't just a perf change, it must be
-    behavior-preserving."""
+    """Callers that already have build_ranked_works(db) can pass it in via candidates= to
+    avoid a redundant second full rebuild in the same request (used by /works/{id}/explain,
+    /citizen/status, /transparency/summary). The result must be identical either way --
+    this isn't just a perf optimization, it must be behavior-preserving."""
     from app.services.allocator import run_allocation
     from app.services.ranking import build_ranked_works
 

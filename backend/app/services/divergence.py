@@ -1,6 +1,6 @@
-"""Need-vs-voice divergence per village (Phase 3, first-class field per the project brief:
-"Surface villages with high gap but near-zero voice as a distinct 'silent need' category
-in the API response — this is a first-class field, not an afterthought.").
+"""Need-vs-voice divergence per village. Surfaces villages with high gap but near-zero
+voice as a distinct "silent need" category in the API response -- a first-class field,
+not an afterthought.
 
 divergence = objective_gap_percentile - citizen_voice_percentile, both in [0, 1] computed
 across all 627 Bagalkot villages. A village with high gap and near-zero voice gets a large

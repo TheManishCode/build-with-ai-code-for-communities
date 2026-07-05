@@ -1,4 +1,4 @@
-"""Deduplicate citizen submissions into Issues (Phase 2 step 4).
+"""Deduplicate citizen submissions into Issues.
 
 Submissions are first bucketed by (theme, resolved_lgd_code) — two reports about
 different themes, or in different villages, are never the same issue regardless of

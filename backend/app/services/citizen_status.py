@@ -1,4 +1,4 @@
-"""Phase 9: Citizen Status Loop -- a plain template-filled status string, no model call.
+"""Citizen status lookup -- a plain template-filled status string, no model call.
 
 Lets a citizen check what happened to their specific submission: which dedup group
 ("issue") it was merged into, how many other reports were merged with it, where that

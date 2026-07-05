@@ -1,4 +1,4 @@
-"""Phase 5: budget allocator. Solves a 0/1 knapsack over ranked candidate works --
+"""Budget allocator. Solves a 0/1 knapsack over ranked candidate works --
 maximize total composite_score subject to sum(cost) <= budget -- using a flat per-theme
 cost heuristic (config/ranking_weights.yaml theme_cost_heuristic) since no real per-work
 cost estimate exists in any source dataset. This heuristic is stated explicitly here and

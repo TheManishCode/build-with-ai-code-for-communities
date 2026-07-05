@@ -1,7 +1,7 @@
-"""Lightweight NLP pipeline for citizen submissions (Phase 2 step 3).
+"""Lightweight NLP pipeline for citizen submissions.
 
-Deliberately simple, not over-engineered, per the project brief ("pick whichever you
-can get working fastest; don't over-engineer the model choice"):
+Deliberately simple, not over-engineered -- pick whichever approach works fastest for each
+step rather than over-engineering the model choice:
   - translate(): deep-translator's free Google Translate endpoint (no API key needed;
     this project has no LLM API key configured in its environment). "voice" channel
     submissions are treated as already-transcribed text — this seed/demo pipeline does

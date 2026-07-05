@@ -1,4 +1,4 @@
-"""Citizen-voice (demand) signal, recency-weighted (Phase 3)."""
+"""Citizen-voice (demand) signal, recency-weighted."""
 
 from __future__ import annotations
 

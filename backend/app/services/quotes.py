@@ -1,4 +1,4 @@
-"""Phase 7: "In Their Words" -- pure data join, no model call. For a ranked work backed by
+""""In Their Words" -- pure data join, no model call. For a ranked work backed by
 a clustered Issue, return up to 3 of the original citizen submissions that fed it, so the
 MP's office can see the actual voice behind a score rather than just a paraphrase.
 

@@ -136,11 +136,11 @@ def test_electricity_gap_is_mostly_unavailable_not_fabricated(gaps):
 
 
 def test_theme_medians_computed_once_match_per_candidate_recomputation(gaps):
-    """Efficiency fix (code-quality audit): the school/health/electricity constituency
-    median used in reasoning strings used to be recomputed by re-scanning+sorting all ~627
-    villages once per candidate work (hundreds of redundant sorts per request). Now computed
-    once via _compute_theme_medians and threaded through. Assert the hoisted value matches
-    an independent from-scratch computation -- this is a perf change, not a behavior change."""
+    """The school/health/electricity constituency median used in reasoning strings is
+    computed once via _compute_theme_medians and threaded through, rather than being
+    re-scanned and re-sorted from all ~627 villages for every candidate work. Assert the
+    hoisted value matches an independent from-scratch computation -- this is a perf
+    optimization, not a behavior change."""
     medians = _compute_theme_medians(gaps)
     for theme in ("school", "health"):
         values = sorted(g.raw[theme] for g in gaps.values() if g.raw.get(theme) is not None)

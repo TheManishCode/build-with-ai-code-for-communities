@@ -1,4 +1,4 @@
-"""Phase 7 ("In Their Words") tests -- this is a pure data join, so the bar is byte-identical
+""""In Their Words" tests -- this is a pure data join, so the bar is byte-identical
 equality with the stored submission row, not "looks plausible"."""
 
 from sqlalchemy import text

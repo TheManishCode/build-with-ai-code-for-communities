@@ -1,4 +1,4 @@
-"""Phase 4: MPLADs backtest validation.
+"""MPLADs backtest validation.
 
 Question: if the ranking model's OBJECTIVE GAP signal (not citizen demand -- see caveat
 below) had been used to prioritize villages, would it have surfaced the villages where

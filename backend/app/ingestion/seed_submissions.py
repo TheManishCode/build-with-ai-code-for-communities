@@ -1,12 +1,16 @@
 """Generate ~60 synthetic citizen development-request submissions across real Bagalkot
-villages (Phase 2 step 2), then run each through the NLP pipeline (translate -> classify
--> extract place -> fuzzy-match to LGD village -> geocode -> embed) and persist to the
-`submission` table.
+villages, then run each through the NLP pipeline (translate -> classify -> extract place ->
+fuzzy-match to LGD village -> geocode -> embed) and persist to the `submission` table.
+
+There is no live intake channel yet (no submission endpoint, no voice/photo pipeline, no
+messaging-app integration) -- this script stands in for that missing intake so the rest of
+the pipeline (dedup, ranking, allocation) has real data to run against.
 
 Scenarios are deliberately clustered: several submissions describe the SAME underlying
 issue (same village + theme) with different phrasing/language/channel, to exercise the
-Phase 2 step 4 deduplication clustering. A handful are singletons (corroboration_count
-will end up 1) to keep the demo honest — not every real report has corroboration.
+deduplication clustering in app.ingestion.build_issues. A handful are singletons
+(corroboration_count will end up 1) to keep the demo honest — not every real report has
+corroboration.
 """
 
 from __future__ import annotations

@@ -9,8 +9,9 @@ router = APIRouter(prefix="/citizen", tags=["citizen"])
 
 
 def _default_mplads_budget(db: Session) -> int:
-    """Duplicated from app.api.allocation._default_budget rather than imported -- see the
-    same note in app.api.works._default_mplads_budget (Phase 8)."""
+    """Duplicated from app.api.allocation._default_budget and app.api.works._default_mplads_budget
+    rather than imported -- three call sites for a two-line query don't justify a shared
+    module dependency between otherwise-independent routers."""
     row = db.execute(
         text("SELECT allocated_amount FROM mplads_allocated_limit WHERE lok_sabha_term = '18th' ORDER BY id LIMIT 1")
     ).first()

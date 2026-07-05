@@ -7,7 +7,7 @@ from app.core.db import Base
 
 class VillageFact(Base):
     """The single materialized village-level fact table every ranking/scoring feature
-    reads from (Phase 1 step 4). Built by app.ingestion.build_village_fact by joining:
+    reads from. Built by app.ingestion.build_village_fact by joining:
       - lgd_village (spine)
       - census_village_amenities (population, schools, health, water, roads, electricity,
         banking — joined by census2011_code == village_code, a direct integer join)
