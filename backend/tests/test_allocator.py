@@ -3,7 +3,7 @@ actually correct (budget constraint respected, value-maximizing, deterministic),
 that it returns something plausible-looking."""
 
 from app.core.ranking_config import ranking_config
-from app.services.allocator import AllocationItem, knapsack_allocate
+from app.services.allocator import knapsack_allocate
 from app.services.ranking import CandidateWork
 
 
@@ -69,3 +69,24 @@ def test_real_bagalkot_allocation_uses_real_ranked_works(db):
     # value should be non-decreasing as budget increases (monotonicity sanity check)
     smaller = run_allocation(db, budget=50_000_000)
     assert result.total_value >= smaller.total_value
+
+
+def test_run_allocation_with_precomputed_candidates_matches_recomputing_them(db):
+    """Efficiency fix (code-quality audit): callers that already have build_ranked_works(db)
+    can pass it in via candidates= to avoid a redundant second full rebuild in the same
+    request (was happening on /works/{id}/explain, /citizen/status, /transparency/summary).
+    The result must be identical either way -- this isn't just a perf change, it must be
+    behavior-preserving."""
+    from app.services.allocator import run_allocation
+    from app.services.ranking import build_ranked_works
+
+    budget = 167_541_747
+    precomputed = build_ranked_works(db)
+    result_with_candidates = run_allocation(db, budget, candidates=precomputed)
+    result_recomputed = run_allocation(db, budget)
+
+    assert result_with_candidates.total_cost == result_recomputed.total_cost
+    assert result_with_candidates.total_value == result_recomputed.total_value
+    assert {it.work.work_id for it in result_with_candidates.selected} == {
+        it.work.work_id for it in result_recomputed.selected
+    }

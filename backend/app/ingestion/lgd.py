@@ -8,13 +8,11 @@ NOT binary Excel, xlrd/openpyxl cannot open them.
 
 from __future__ import annotations
 
-from pathlib import Path
-
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.core.db import SessionLocal, engine
+from app.core.db import SessionLocal
 from app.ingestion.msxml import assert_header, find_data_rows, iter_rows
 from app.models import LGDBlock, LGDDistrict, LGDLocalBody, LGDSubdistrict, LGDVillage, LGDVillageGPMapping
 

@@ -5,9 +5,9 @@ from app.api.allocation import router as allocation_router
 from app.api.backtest import router as backtest_router
 from app.api.boundary import router as boundary_router
 from app.api.citizen import router as citizen_router
-from app.api.transparency import router as transparency_router
 from app.api.divergence import router as divergence_router
 from app.api.issues import router as issues_router
+from app.api.transparency import router as transparency_router
 from app.api.villages import router as villages_router
 from app.api.works import router as works_router
 from app.core.config import settings
@@ -16,8 +16,11 @@ app = FastAPI(title="People's Priorities API")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
-    allow_methods=["*"],
+    allow_origins=settings.cors_origin_list,
+    # This API is currently 100% read-only GET (verified: every route in app/api/*.py is a
+    # @router.get) -- scoped to GET/HEAD/OPTIONS rather than "*" (tightened during a code
+    # quality/security audit). Widen this if a write endpoint is ever added.
+    allow_methods=["GET", "HEAD", "OPTIONS"],
     allow_headers=["*"],
 )
 

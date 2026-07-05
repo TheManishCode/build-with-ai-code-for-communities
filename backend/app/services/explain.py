@@ -357,7 +357,7 @@ def explain_work(db: Session, work_id: str, budget: int) -> dict | None:
     if work is None:
         return None
 
-    allocation = run_allocation(db, budget)
+    allocation = run_allocation(db, budget, candidates=works)
     is_funded = any(it.work.work_id == work_id for it in allocation.selected)
 
     from app.core.ranking_config import ranking_config

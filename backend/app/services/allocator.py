@@ -95,6 +95,17 @@ def knapsack_allocate(
     )
 
 
-def run_allocation(db: Session, budget: int, config: RankingConfig = ranking_config) -> AllocationResult:
-    candidates = build_ranked_works(db)
+def run_allocation(
+    db: Session,
+    budget: int,
+    config: RankingConfig = ranking_config,
+    candidates: list[CandidateWork] | None = None,
+) -> AllocationResult:
+    """Pass `candidates` when the caller has already computed build_ranked_works(db) for
+    this request (e.g. to also show the full ranking) -- avoids rebuilding the full ~689-
+    candidate list (gap percentiles + demand signals + reasoning strings for every
+    candidate) a second time in the same request. Callers that only need the allocation
+    can omit it and it's computed here as before."""
+    if candidates is None:
+        candidates = build_ranked_works(db)
     return knapsack_allocate(candidates, budget, config.theme_cost_heuristic)

@@ -73,7 +73,7 @@ def build_transparency_summary(db: Session, budget: int | None = None) -> Transp
     gap_only = sum(1 for w in works if w.source == "gap")
 
     effective_budget = budget if budget is not None else _default_budget(db)
-    allocation = run_allocation(db, effective_budget)
+    allocation = run_allocation(db, effective_budget, candidates=works)
 
     backtest = run_backtest(db)
     precision_100 = next((c.precision for c in backtest.cutoffs if c.k == 100), None)

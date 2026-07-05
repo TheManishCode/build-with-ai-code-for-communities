@@ -87,7 +87,7 @@ def get_citizen_status(db: Session, submission_id: int, budget: int) -> CitizenS
             rank = i
             break
 
-    allocation = run_allocation(db, budget)
+    allocation = run_allocation(db, budget, candidates=works)
     is_funded = any(it.work.work_id == work_id for it in allocation.selected) if rank is not None else None
 
     if is_funded:

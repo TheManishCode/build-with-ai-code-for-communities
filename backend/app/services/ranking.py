@@ -21,7 +21,7 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from app.core.ranking_config import RankingConfig, ranking_config
-from app.services.demand import compute_issue_demand, village_voice_raw
+from app.services.demand import compute_issue_demand
 from app.services.gap import THEMES_WITH_GAP_SIGNAL, VillageGap, compute_village_gaps
 
 
@@ -54,7 +54,26 @@ def _percentile_rank_of(value: float, all_values: list[float]) -> float:
     return (rank + ties / 2.0) / (n - 1) if n > 1 else 0.5
 
 
-def _raw_metric_clause(theme: str, gap: VillageGap, all_gaps: dict[int, VillageGap]) -> str:
+def _compute_theme_medians(all_gaps: dict[int, VillageGap]) -> dict[str, float]:
+    """Precomputed once per build_ranked_works() call and threaded through to every
+    candidate's reasoning string -- these medians are the same number regardless of which
+    candidate is asking, so recomputing them (a full ~627-village list comprehension +
+    sort) inside the per-candidate loop was pure redundant work. Caught during a code
+    quality/efficiency audit: for a request ranking ~689 candidates, this was re-sorting
+    the same ~627-element list hundreds of times over.
+    """
+    medians: dict[str, float] = {}
+    for theme in ("school", "health"):
+        values = [g.raw[theme] for g in all_gaps.values() if g.raw.get(theme) is not None]
+        if values:
+            medians[theme] = sorted(values)[len(values) // 2]
+    electricity_hours = [24.0 - g.raw["electricity"] for g in all_gaps.values() if g.raw.get("electricity") is not None]
+    if electricity_hours:
+        medians["electricity"] = sorted(electricity_hours)[len(electricity_hours) // 2]
+    return medians
+
+
+def _raw_metric_clause(theme: str, gap: VillageGap, theme_medians: dict[str, float]) -> str:
     raw = gap.raw.get(theme)
     if raw is None:
         return f"no {theme} data recorded for this village"
@@ -77,16 +96,14 @@ def _raw_metric_clause(theme: str, gap: VillageGap, all_gaps: dict[int, VillageG
         return "only open or unspecified drainage recorded"
 
     if theme in ("school", "health"):
-        others = [g.raw[theme] for g in all_gaps.values() if g.raw.get(theme) is not None]
-        median = sorted(others)[len(others) // 2] if others else None
+        median = theme_medians.get(theme)
         label = "population per school" if theme == "school" else "population per health facility"
         med_txt = f" (constituency median ~{median:.0f})" if median else ""
         return f"{raw:.0f} {label}{med_txt}"
 
     if theme == "electricity":
         hours = 24.0 - raw
-        others = [24.0 - g.raw["electricity"] for g in all_gaps.values() if g.raw.get("electricity") is not None]
-        med = sorted(others)[len(others) // 2] if others else None
+        med = theme_medians.get("electricity")
         med_txt = f" (constituency median ~{med:.1f}h)" if med else ""
         return f"only {hours:.1f} average daily hours of power supply recorded{med_txt}"
 
@@ -109,7 +126,7 @@ def build_reasoning(
     corroboration_count: int,
     demand_percentile: float,
     gap: VillageGap | None,
-    all_gaps: dict[int, VillageGap],
+    theme_medians: dict[str, float],
     mplads_by_village: dict[int, dict],
     village_code: int | None,
     representative_text: str = "",
@@ -119,14 +136,14 @@ def build_reasoning(
 
     if source == "gap":
         gap_pct = gap.percentile.get(theme) if gap else None
-        metric_clause = _raw_metric_clause(theme, gap, all_gaps) if gap else "no data recorded"
+        metric_clause = _raw_metric_clause(theme, gap, theme_medians) if gap else "no data recorded"
         gap_txt = f"{gap_pct:.0%}" if gap_pct is not None else "unknown"
         return (
             f"No citizen submissions recorded for {theme} in {place}, but it ranks in the "
             f"{gap_txt} percentile for {theme} gap in the constituency ({metric_clause}); {mplads_clause}."
         )
 
-    metric_clause = _raw_metric_clause(theme, gap, all_gaps) if gap else "no fact-table gap signal available for this theme"
+    metric_clause = _raw_metric_clause(theme, gap, theme_medians) if gap else "no fact-table gap signal available for this theme"
     quote = f' Representative report: "{representative_text.strip()}"' if representative_text else ""
     return (
         f"{corroboration_count} submission(s) about {theme} in {place} "
@@ -209,6 +226,7 @@ def build_ranked_works(db: Session, config: RankingConfig = ranking_config, now:
                     )
                 )
 
+    theme_medians = _compute_theme_medians(gaps)  # computed once, not per-candidate -- see docstring
     all_demand_raw = [c.demand_raw for c in candidates]
     for c in candidates:
         c.demand_percentile = _percentile_rank_of(c.demand_raw, all_demand_raw)
@@ -217,7 +235,7 @@ def build_ranked_works(db: Session, config: RankingConfig = ranking_config, now:
         gap_obj = gaps.get(c.village_code) if c.village_code else None
         c.reasoning = build_reasoning(
             c.source, c.theme, c.village_name, c.corroboration_count, c.demand_percentile,
-            gap_obj, gaps, mplads_by_village, c.village_code,
+            gap_obj, theme_medians, mplads_by_village, c.village_code,
             representative_text=c.representative_text,
         )
 

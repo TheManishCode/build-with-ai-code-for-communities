@@ -27,10 +27,14 @@ function App() {
           <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">People's Priorities</h1>
           <p className="text-sm text-gray-500">Bagalkot constituency — data-driven development priorities</p>
         </div>
-        <nav className="mx-auto flex max-w-5xl gap-1 px-4">
+        <nav className="mx-auto flex max-w-5xl gap-1 px-4" role="tablist" aria-label="Sections">
           {TABS.map((t) => (
             <button
               key={t.id}
+              role="tab"
+              id={`tab-${t.id}`}
+              aria-selected={tab === t.id}
+              aria-controls={`panel-${t.id}`}
               onClick={() => setTab(t.id)}
               className={`rounded-t-md px-4 py-2 text-sm font-medium ${
                 tab === t.id
@@ -44,7 +48,7 @@ function App() {
         </nav>
       </header>
 
-      <main>
+      <main id={`panel-${tab}`} role="tabpanel" aria-labelledby={`tab-${tab}`}>
         {tab === 'works' && <WorksList />}
         {tab === 'map' && <MapView />}
         {tab === 'budget' && <BudgetSimulator />}

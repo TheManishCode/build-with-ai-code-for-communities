@@ -66,14 +66,18 @@ export function WorkCard({ work, onDraftLetter }: { work: Work; onDraftLetter: (
         <div className="mt-3 flex flex-col gap-2 border-t border-gray-100 pt-3 dark:border-gray-700">
           {work.source_quotes.map((q) => (
             <div key={q.submission_id} className="rounded-md bg-gray-50 p-2.5 text-xs dark:bg-gray-900">
-              <p className="italic text-gray-700 dark:text-gray-300">
+              <p className="italic text-gray-700 dark:text-gray-300" lang={q.original_language}>
                 "{q.original_text}"
-                <span className="ml-1 not-italic text-gray-400">({q.original_language})</span>
+                <span className="ml-1 not-italic text-gray-500" lang="en">
+                  ({q.original_language})
+                </span>
               </p>
               {q.original_language !== 'en' && q.translated_text && (
-                <p className="mt-1 text-gray-500">Translated: "{q.translated_text}"</p>
+                <p className="mt-1 text-gray-600 dark:text-gray-400" lang="en">
+                  Translated: "{q.translated_text}"
+                </p>
               )}
-              <p className="mt-1 text-gray-400">
+              <p className="mt-1 text-gray-500 dark:text-gray-400">
                 Submission #{q.submission_id}
                 {q.village ? ` · ${q.village}` : ''}
               </p>

@@ -11,8 +11,6 @@ will end up 1) to keep the demo honest — not every real report has corroborati
 
 from __future__ import annotations
 
-from sqlalchemy.orm import Session
-
 from app.core.db import SessionLocal
 from app.models.submission import Channel, Submission, Theme
 from app.services import nlp
@@ -160,7 +158,7 @@ def run() -> None:
         n_classified_matching_hint = 0
         n_place_matched = 0
         submissions: list[Submission] = []
-        for r, emb in zip(rows, embeddings):
+        for r, emb in zip(rows, embeddings, strict=True):
             theme = nlp.classify_theme(r["translated_text"])
             if theme == r["theme_hint"]:
                 n_classified_matching_hint += 1

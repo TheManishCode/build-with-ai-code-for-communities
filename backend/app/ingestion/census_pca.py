@@ -14,13 +14,12 @@ before this script.
 
 from __future__ import annotations
 
-import math
 import re
 from typing import Any
 
 import pandas as pd
 from rapidfuzz import fuzz, process
-from sqlalchemy import func, text
+from sqlalchemy import func
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 

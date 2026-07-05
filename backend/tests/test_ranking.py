@@ -13,7 +13,7 @@ import pytest
 from app.core.ranking_config import ranking_config
 from app.services.divergence import compute_village_divergence
 from app.services.gap import THEMES_WITH_GAP_SIGNAL, compute_village_gaps
-from app.services.ranking import build_ranked_works
+from app.services.ranking import _compute_theme_medians, build_ranked_works
 
 
 @pytest.fixture(scope="module")
@@ -133,6 +133,22 @@ def test_electricity_gap_is_mostly_unavailable_not_fabricated(gaps):
         f"gap), found {non_null} -- if the source file was updated, update the docstring "
         f"in app/services/gap.py::_raw_electricity_gap and this test's threshold"
     )
+
+
+def test_theme_medians_computed_once_match_per_candidate_recomputation(gaps):
+    """Efficiency fix (code-quality audit): the school/health/electricity constituency
+    median used in reasoning strings used to be recomputed by re-scanning+sorting all ~627
+    villages once per candidate work (hundreds of redundant sorts per request). Now computed
+    once via _compute_theme_medians and threaded through. Assert the hoisted value matches
+    an independent from-scratch computation -- this is a perf change, not a behavior change."""
+    medians = _compute_theme_medians(gaps)
+    for theme in ("school", "health"):
+        values = sorted(g.raw[theme] for g in gaps.values() if g.raw.get(theme) is not None)
+        if values:
+            assert medians[theme] == values[len(values) // 2]
+    hours = sorted(24.0 - g.raw["electricity"] for g in gaps.values() if g.raw.get("electricity") is not None)
+    if hours:
+        assert medians["electricity"] == hours[len(hours) // 2]
 
 
 def test_silent_need_flag_requires_high_gap_and_low_voice(db):

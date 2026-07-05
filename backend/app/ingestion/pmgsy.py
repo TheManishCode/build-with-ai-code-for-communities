@@ -22,14 +22,12 @@ Upsert notes:
 
 from __future__ import annotations
 
-from pathlib import Path
-
 import geopandas as gpd
 from geoalchemy2.shape import from_shape
 from shapely import wkb
 from sqlalchemy import delete, text
-from sqlalchemy.orm import Session
 from sqlalchemy.dialects.postgresql import insert
+from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.core.db import SessionLocal

@@ -37,18 +37,22 @@ export function BudgetSimulator() {
 
       <div className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-800">
         <div className="mb-2 flex items-center justify-between">
-          <label className="text-sm font-medium text-gray-700 dark:text-gray-300">MPLADs annual limit</label>
+          <label htmlFor="mplads-budget-slider" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            MPLADs annual limit
+          </label>
           <span className="text-lg font-bold tabular-nums text-gray-900 dark:text-gray-100">
             {budget != null ? formatRupees(budget) : '...'}
           </span>
         </div>
         <input
+          id="mplads-budget-slider"
           type="range"
           min={0}
           max={maxBudget}
           step={100000}
           value={budget ?? 0}
           onChange={(e) => setBudget(Number(e.target.value))}
+          aria-valuetext={budget != null ? formatRupees(budget) : undefined}
           className="w-full accent-gray-900 dark:accent-gray-100"
         />
         {defaultAlloc && (

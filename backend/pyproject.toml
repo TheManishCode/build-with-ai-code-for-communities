@@ -1,0 +1,17 @@
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B"]
+# B008 (function-call-in-default-argument) is a false positive for this codebase's
+# idiomatic FastAPI pattern (`db: Session = Depends(get_db)` on every route) -- that's the
+# correct, intended usage of Depends(), not a mutable-default-argument bug. Confirmed
+# during a code-quality audit rather than silenced without checking.
+ignore = [
+    "B008", # false positive for FastAPI's `db: Session = Depends(get_db)` idiom
+    "UP042", # Theme/Channel could become enum.StrEnum (3.11+), but they're SQLAlchemy Enum
+    # column types threaded through many modules (ranking.py, explain.py, API responses
+    # calling .value explicitly) -- verified low-risk but zero functional benefit; not
+    # worth the regression surface this late for a pure style modernization.
+]

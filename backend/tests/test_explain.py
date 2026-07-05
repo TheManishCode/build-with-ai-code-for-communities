@@ -183,7 +183,6 @@ def test_find_comparisons_only_returns_higher_scoring_funded_works(db):
 
 
 def test_explain_work_funded_case_has_no_explanation_fields(db):
-    works = build_ranked_works(db)
     allocation = run_allocation(db, budget=167_541_747)
     assert allocation.selected, "expected at least one funded work"
     funded_id = allocation.selected[0].work.work_id

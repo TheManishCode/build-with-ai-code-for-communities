@@ -23,8 +23,12 @@ export function CitizenStatusLookup() {
       <h2 className="mb-1 text-lg font-semibold text-gray-900 dark:text-gray-100">Check Your Report Status</h2>
       <p className="mb-4 text-sm text-gray-500">Enter your submission ID to see what happened to your report.</p>
 
+      <label htmlFor="submission-id-input" className="sr-only">
+        Submission ID
+      </label>
       <div className="flex gap-2">
         <input
+          id="submission-id-input"
           type="number"
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}

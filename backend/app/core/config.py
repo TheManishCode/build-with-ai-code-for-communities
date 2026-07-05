@@ -18,5 +18,14 @@ class Settings(BaseSettings):
     # verified callable for this account; "nvidia/llama-3.1-nemotron-70b-instruct" is listed
     # in the catalog but returns 404 "Function not found for account" when actually called.
 
+    # Comma-separated list, e.g. "http://localhost:5173,https://peoples-priorities.example.org"
+    # -- was hardcoded to the dev origin only; made configurable so a real deployment doesn't
+    # need a code change (caught during a code-quality audit).
+    cors_origins: str = "http://localhost:5173"
+
+    @property
+    def cors_origin_list(self) -> list[str]:
+        return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
+
 
 settings = Settings()
