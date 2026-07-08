@@ -8,12 +8,14 @@ import type {
   DraftLetterResponse,
   ExplanationResponse,
   Issue,
+  SubmissionChannel,
+  SubmissionResponse,
   TransparencySummaryResponse,
   Village,
   Work,
 } from './types'
 
-const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:8000'
+export const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:8000'
 
 const client = axios.create({ baseURL: API_BASE })
 
@@ -34,4 +36,12 @@ export const api = {
   citizenStatus: (submissionId: number) =>
     client.get<CitizenStatusResponse>('/citizen/status', { params: { submission_id: submissionId } }).then((r) => r.data),
   transparencySummary: () => client.get<TransparencySummaryResponse>('/transparency/summary').then((r) => r.data),
+  submitReport: (report: { channel: SubmissionChannel; rawText: string; language: string; photo?: File | null }) => {
+    const form = new FormData()
+    form.append('channel', report.channel)
+    form.append('raw_text', report.rawText)
+    form.append('language', report.language)
+    if (report.photo) form.append('photo', report.photo)
+    return client.post<SubmissionResponse>('/submissions', form).then((r) => r.data)
+  },
 }

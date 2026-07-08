@@ -31,10 +31,10 @@ class Theme(str, enum.Enum):
 
 class Submission(Base):
     """A single raw citizen development request. `channel` records how it arrived
-    (voice/text/photo), but there is currently no live intake pipeline behind any channel --
-    all rows today come from app.ingestion.seed_submissions, standing in for citizen input
-    until a real submission endpoint and per-channel processing (speech-to-text, image
-    handling, a messaging-app gateway) exist."""
+    (voice/text/photo). Live intake (app.api.submissions) accepts text directly, voice as
+    browser-transcribed text, and photo as an attached image (stored, not vision-analyzed);
+    app.ingestion.seed_submissions additionally seeds synthetic historical volume for demo
+    purposes using the same NLP pipeline (app.services.nlp)."""
 
     __tablename__ = "submission"
 
@@ -52,6 +52,8 @@ class Submission(Base):
     urgency_score: Mapped[float | None] = mapped_column(Float)
     embedding: Mapped[list[float] | None] = mapped_column(ARRAY(Float))
     issue_id: Mapped[int | None] = mapped_column(ForeignKey("issue.id"))
+    photo_path: Mapped[str | None] = mapped_column(String(512))  # relative path under the
+    # uploads static dir (see app.api.submissions); set only when a photo was attached.
     created_at: Mapped[datetime] = mapped_column(server_default=func.now())
 
 

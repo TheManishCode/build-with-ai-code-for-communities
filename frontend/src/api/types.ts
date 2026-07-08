@@ -160,3 +160,19 @@ export interface Issue {
   representative_text: string
   corroboration_count: number
 }
+
+export type SubmissionChannel = 'voice' | 'text' | 'photo'
+
+export interface SubmissionResponse {
+  submission_id: number
+  channel: SubmissionChannel
+  language: string
+  translated_text: string | null
+  theme: string
+  resolved_village_code: number | null
+  village_name: string | null
+  place_match_score: number | null
+  photo_url: string | null
+  issue_id: number | null
+  created_at: string
+}

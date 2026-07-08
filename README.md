@@ -22,12 +22,19 @@ letter generation, a rejection explainer, and backtesting against historical MPL
 spending — all running against real Bagalkot data (Census 2011, LGD, PMGSY, MPLADS,
 village amenities).
 
-**Citizen intake is not live.** The data model anticipates voice/text/photo
-submissions (see `Submission.channel`), but there is no submission endpoint, no
-speech-to-text or image pipeline, and no messaging-app integration. All ~60
-submissions in the system come from `backend/app/ingestion/seed_submissions.py`, a
-synthetic generator standing in for real intake so the rest of the pipeline has data
-to run against. Building a real intake channel is the natural next step.
+**Citizen intake is live.** `POST /submissions` (`backend/app/api/submissions.py`)
+accepts a real report — text, or voice transcribed to text client-side via the
+browser's Web Speech API, or a photo with a caption — runs it through the same NLP
+pipeline used to seed demo data (translate → classify theme → extract and fuzzy-match
+the place name to an LGD village → geocode → embed), stores it, and rebuilds issue
+clusters synchronously so the new report is reflected in the ranking immediately. The
+frontend's "Report an Issue" tab (`frontend/src/components/SubmitReportForm.tsx`) is
+the citizen-facing form; the 58 seeded submissions from
+`backend/app/ingestion/seed_submissions.py` still provide baseline demo volume
+alongside whatever comes in live. **Not built**: a WhatsApp/Telegram/SMS gateway (the
+API is channel-agnostic and could sit behind one, but no bot integration exists), and
+photo submissions are stored and displayed as evidence rather than analyzed by a
+vision model.
 
 ## Architecture
 
@@ -43,7 +50,7 @@ source code/
                              the rejection explainer, transparency summary
       api/                  FastAPI routers, one per resource
     alembic/                Schema migrations
-    tests/                  56 tests against the live database (see Testing, below)
+    tests/                  64 tests against the live database (see Testing, below)
   frontend/                 React + Vite + TanStack Query + Tailwind + Leaflet
 ```
 
@@ -140,6 +147,7 @@ npm run dev      # http://localhost:5173
 
 | Endpoint | Purpose |
 |---|---|
+| `POST /submissions` | Live citizen intake -- text, browser-transcribed voice, or a photo + caption |
 | `GET /villages` | Village-level facts (demographics, infrastructure gaps) |
 | `GET /issues` | Deduplicated citizen issues |
 | `GET /works` | Ranked candidate development works, with source quotes |
@@ -157,9 +165,10 @@ Full interactive docs at `http://localhost:8000/docs` once the backend is runnin
 ## Testing
 
 ```bash
-# backend -- 56 tests against the live database (no mock DB; this is a deliberate
+# backend -- 64 tests against the live database (no mock DB; this is a deliberate
 # choice for a dataset-driven project where the interesting bugs are in the data,
-# not the plumbing)
+# not the plumbing). Tests that POST to /submissions clean up the rows they create
+# (and rebuild issue clusters) so the shared seed dataset stays pristine.
 cd backend && python -m pytest tests/
 
 # lint
@@ -173,11 +182,21 @@ npm run build                   # tsc + vite build
 
 ## Known limitations
 
-- **No live citizen intake** (see above) — the single largest gap versus a full
-  end-to-end deployment.
-- **No authentication anywhere.** `GET /citizen/status` takes a plain sequential
-  integer ID with no access control; the correct fix is an opaque per-submission
-  token issued at intake time, which doesn't exist without a real intake endpoint.
+- **No messaging-app gateway.** Citizens can report via the web form (text, browser
+  speech-to-text, or photo+caption), but there is no WhatsApp/Telegram/SMS bot -- the
+  API is channel-agnostic and could sit behind one, but that integration doesn't exist.
+- **Photos are stored as evidence, not analyzed.** A submitted photo is saved and
+  displayed alongside the report; there is no vision model extracting information from
+  the image itself (e.g. reading a meter, assessing road damage severity).
+- **No authentication anywhere.** `POST /submissions` is unauthenticated and rate-limit-
+  free (anyone can submit; fine for a demo, not for a public deployment), and
+  `GET /citizen/status` takes a plain sequential integer ID with no access control --
+  the correct fix is an opaque per-submission token issued at intake time.
+- **Issue re-clustering on every submission is a full rebuild**, not an incremental
+  update (`app.services.intake` calls `app.ingestion.build_issues.run()`). Cheap at
+  Bagalkot's current data volume since embeddings are precomputed and stored -- no
+  model calls happen during the rebuild -- but it's O(total submissions) per new
+  report, worth revisiting before a much larger submission volume.
 - **No caching layer.** Every request recomputes the ranking from Postgres; fine at
   Bagalkot's current data volume, worth revisiting before scaling to more
   constituencies or a much larger submission volume.

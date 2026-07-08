@@ -2,9 +2,9 @@ import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { api } from '../api/client'
 
-export function CitizenStatusLookup() {
-  const [inputValue, setInputValue] = useState('')
-  const [submittedId, setSubmittedId] = useState<number | null>(null)
+export function CitizenStatusLookup({ initialSubmissionId }: { initialSubmissionId?: number } = {}) {
+  const [inputValue, setInputValue] = useState(initialSubmissionId != null ? String(initialSubmissionId) : '')
+  const [submittedId, setSubmittedId] = useState<number | null>(initialSubmissionId ?? null)
 
   const { data, isFetching, error } = useQuery({
     queryKey: ['citizen-status', submittedId],

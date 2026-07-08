@@ -5,10 +5,12 @@ import { BudgetSimulator } from './components/BudgetSimulator'
 import { BacktestPanel } from './components/BacktestPanel'
 import { CitizenStatusLookup } from './components/CitizenStatusLookup'
 import { TransparencyDashboard } from './components/TransparencyDashboard'
+import { SubmitReportForm } from './components/SubmitReportForm'
 
-type Tab = 'map' | 'works' | 'budget' | 'backtest' | 'status' | 'transparency'
+type Tab = 'report' | 'map' | 'works' | 'budget' | 'backtest' | 'status' | 'transparency'
 
 const TABS: { id: Tab; label: string }[] = [
+  { id: 'report', label: 'Report an Issue' },
   { id: 'works', label: 'Ranked Priorities' },
   { id: 'map', label: 'Map' },
   { id: 'budget', label: 'Budget Simulator' },
@@ -18,7 +20,13 @@ const TABS: { id: Tab; label: string }[] = [
 ]
 
 function App() {
-  const [tab, setTab] = useState<Tab>('works')
+  const [tab, setTab] = useState<Tab>('report')
+  const [lastSubmissionId, setLastSubmissionId] = useState<number | undefined>(undefined)
+
+  const handleViewStatus = (submissionId: number) => {
+    setLastSubmissionId(submissionId)
+    setTab('status')
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -49,11 +57,12 @@ function App() {
       </header>
 
       <main id={`panel-${tab}`} role="tabpanel" aria-labelledby={`tab-${tab}`}>
+        {tab === 'report' && <SubmitReportForm onViewStatus={handleViewStatus} />}
         {tab === 'works' && <WorksList />}
         {tab === 'map' && <MapView />}
         {tab === 'budget' && <BudgetSimulator />}
         {tab === 'backtest' && <BacktestPanel />}
-        {tab === 'status' && <CitizenStatusLookup />}
+        {tab === 'status' && <CitizenStatusLookup initialSubmissionId={lastSubmissionId} />}
         {tab === 'transparency' && <TransparencyDashboard />}
       </main>
     </div>
