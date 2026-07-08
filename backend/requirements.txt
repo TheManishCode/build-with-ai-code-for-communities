@@ -7,6 +7,7 @@ geoalchemy2
 pydantic
 pydantic-settings
 python-dotenv
+python-multipart
 
 pandas
 openpyxl
