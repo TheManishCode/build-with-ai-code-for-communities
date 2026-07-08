@@ -59,6 +59,10 @@ combination of works that fits the MP's real MPLADS budget.
 
 **Prerequisites:** Python 3.11+, Node 20+, PostgreSQL 16+ with the PostGIS extension.
 
+Generated files are intentionally kept out of version control: Python virtualenvs and
+bytecode, pytest and lint caches, Node dependencies, frontend build output, local
+`.env` files, and editor state.
+
 ### 1. Database
 
 ```sql

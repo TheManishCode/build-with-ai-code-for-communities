@@ -1,10 +1,32 @@
+# Python
 .venv/
+venv/
+env/
+ENV/
 __pycache__/
 *.pyc
-.env
+*.pyo
+*.pyd
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.hypothesis/
+.coverage
+coverage/
+htmlcov/
+*.egg-info/
+
+# Node / frontend
 node_modules/
 dist/
-.pytest_cache/
-*.egg-info/
+build/
 frontend/.vite/
+
+# Local config and logs
+.env
+.env.*
 *.log
+.DS_Store
+.ipynb_checkpoints/
+.idea/
+.vscode/
