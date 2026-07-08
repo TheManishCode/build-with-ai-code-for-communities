@@ -1,83 +1,84 @@
 import { useState } from 'react'
+import { FileText, MessageSquareQuote, Users } from 'lucide-react'
 import type { Work } from '../api/types'
-
-const THEME_COLORS: Record<string, string> = {
-  water: 'bg-blue-100 text-blue-800',
-  road: 'bg-amber-100 text-amber-800',
-  school: 'bg-violet-100 text-violet-800',
-  health: 'bg-rose-100 text-rose-800',
-  electricity: 'bg-yellow-100 text-yellow-800',
-  sanitation: 'bg-emerald-100 text-emerald-800',
-  other: 'bg-gray-100 text-gray-800',
-}
+import { Card } from './ui/Card'
+import { Button } from './ui/Button'
+import { ThemeBadge } from './ui/Badge'
+import { Meter } from './ui/Meter'
+import { InfoTooltip } from './ui/InfoTooltip'
 
 export function WorkCard({ work, onDraftLetter }: { work: Work; onDraftLetter: (workId: string) => void }) {
-  const themeClass = THEME_COLORS[work.theme] ?? THEME_COLORS.other
   const scorePct = Math.round(work.composite_score * 100)
   const [showQuotes, setShowQuotes] = useState(false)
   const hasQuotes = work.source_quotes.length > 0
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+    <Card className="p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2">
-          <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${themeClass}`}>{work.theme}</span>
+          <ThemeBadge theme={work.theme} />
           {work.source === 'gap' && (
-            <span className="rounded-full bg-purple-100 px-2.5 py-0.5 text-xs font-medium text-purple-800">
+            <span className="inline-flex items-center rounded-full bg-violet-100 px-2.5 py-0.5 text-xs font-medium text-violet-800 dark:bg-violet-900/40 dark:text-violet-200">
               silent need
             </span>
           )}
-          <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+          <span className="text-sm font-semibold text-neutral-900 dark:text-neutral-50">
             {work.village_name ?? 'Unresolved location'}
           </span>
         </div>
-        <div className="flex flex-col items-end shrink-0">
-          <span className="text-lg font-bold tabular-nums text-gray-900 dark:text-gray-100">{scorePct}</span>
-          <span className="text-xs text-gray-500">priority score</span>
+        <div className="flex shrink-0 flex-col items-end gap-1">
+          <div className="flex items-center gap-1">
+            <span className="text-lg font-semibold tabular-nums text-neutral-900 dark:text-neutral-50">{scorePct}</span>
+            <InfoTooltip label="How the priority score works">
+              Composite of two constituency-wide percentiles: <strong>demand</strong> (citizen
+              reports, recency-weighted) and <strong>gap</strong> (objective infrastructure
+              shortfall vs. Census/amenities data).
+            </InfoTooltip>
+          </div>
+          <Meter value={work.composite_score} className="w-20" />
         </div>
       </div>
 
-      <p className="mt-3 text-sm leading-relaxed text-gray-700 dark:text-gray-300">{work.reasoning}</p>
+      <p className="mt-3 text-sm leading-relaxed text-neutral-700 dark:text-neutral-300">{work.reasoning}</p>
 
-      <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-gray-500">
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-neutral-500 dark:text-neutral-400">
         <div className="flex gap-4">
-          <span>{work.corroboration_count} report{work.corroboration_count === 1 ? '' : 's'}</span>
+          <span className="flex items-center gap-1">
+            <Users size={13} aria-hidden="true" />
+            {work.corroboration_count} report{work.corroboration_count === 1 ? '' : 's'}
+          </span>
           {work.population_affected != null && <span>{work.population_affected.toLocaleString()} people affected</span>}
         </div>
         <div className="flex gap-2">
           {hasQuotes && (
-            <button
-              onClick={() => setShowQuotes((v) => !v)}
-              className="rounded-md border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
-            >
+            <Button variant="secondary" className="flex items-center gap-1.5 px-3 py-1.5 text-xs" onClick={() => setShowQuotes((v) => !v)}>
+              <MessageSquareQuote size={13} aria-hidden="true" />
               {showQuotes ? 'Hide' : 'In their words'} ({work.source_quotes.length})
-            </button>
+            </Button>
           )}
-          <button
-            onClick={() => onDraftLetter(work.work_id)}
-            className="rounded-md bg-gray-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-gray-700 dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-white"
-          >
+          <Button className="flex items-center gap-1.5 px-3 py-1.5 text-xs" onClick={() => onDraftLetter(work.work_id)}>
+            <FileText size={13} aria-hidden="true" />
             Generate draft letter
-          </button>
+          </Button>
         </div>
       </div>
 
       {showQuotes && hasQuotes && (
-        <div className="mt-3 flex flex-col gap-2 border-t border-gray-100 pt-3 dark:border-gray-700">
+        <div className="mt-3 flex flex-col gap-2 border-t border-neutral-100 pt-3 dark:border-neutral-800">
           {work.source_quotes.map((q) => (
-            <div key={q.submission_id} className="rounded-md bg-gray-50 p-2.5 text-xs dark:bg-gray-900">
-              <p className="italic text-gray-700 dark:text-gray-300" lang={q.original_language}>
+            <div key={q.submission_id} className="rounded-md bg-neutral-50 p-2.5 text-xs dark:bg-neutral-800">
+              <p className="italic text-neutral-700 dark:text-neutral-300" lang={q.original_language}>
                 "{q.original_text}"
-                <span className="ml-1 not-italic text-gray-500" lang="en">
+                <span className="ml-1 not-italic text-neutral-500 dark:text-neutral-400" lang="en">
                   ({q.original_language})
                 </span>
               </p>
               {q.original_language !== 'en' && q.translated_text && (
-                <p className="mt-1 text-gray-600 dark:text-gray-400" lang="en">
+                <p className="mt-1 text-neutral-600 dark:text-neutral-400" lang="en">
                   Translated: "{q.translated_text}"
                 </p>
               )}
-              <p className="mt-1 text-gray-500 dark:text-gray-400">
+              <p className="mt-1 text-neutral-500 dark:text-neutral-400">
                 Submission #{q.submission_id}
                 {q.village ? ` · ${q.village}` : ''}
               </p>
@@ -85,6 +86,6 @@ export function WorkCard({ work, onDraftLetter }: { work: Work; onDraftLetter: (
           ))}
         </div>
       )}
-    </div>
+    </Card>
   )
 }

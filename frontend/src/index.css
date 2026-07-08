@@ -1,11 +1,88 @@
 @import "tailwindcss";
 @import "leaflet/dist/leaflet.css";
 
+/* Design tokens -- mirrors src/theme.ts. Keep both in sync by hand when either changes. */
+@theme {
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+  --color-brand-50: #eaf2fc;
+  --color-brand-100: #cde2fb;
+  --color-brand-200: #9ec5f4;
+  --color-brand-300: #6da7ec;
+  --color-brand-400: #3987e5;
+  --color-brand-500: #2a78d6;
+  --color-brand-600: #256abf;
+  --color-brand-700: #184f95;
+  --color-brand-800: #0d366b;
+  --color-brand-900: #0a2a54;
+
+  --color-good: #0ca30c;
+  --color-warning: #fab219;
+  --color-serious: #ec835a;
+  --color-critical: #d03b3b;
+
+  /* Warm neutral scale (replaces Tailwind's default cool gray everywhere in this app) --
+     anchored to references/palette.md's chart-chrome ink progression so UI chrome and
+     chart chrome read as one consistent system rather than two different grays. */
+  --color-neutral-50: #f9f9f7;
+  --color-neutral-100: #f1f0eb;
+  --color-neutral-200: #e1e0d9;
+  --color-neutral-300: #c3c2b7;
+  --color-neutral-400: #898781;
+  --color-neutral-500: #6b6a63;
+  --color-neutral-600: #52514e;
+  --color-neutral-700: #3a3936;
+  --color-neutral-800: #2c2c2a;
+  --color-neutral-900: #1a1a19;
+  --color-neutral-950: #0d0d0d;
+}
+
 html, body, #root {
   height: 100%;
 }
 
+:root {
+  --surface: #fcfcfb;
+  --plane: #f9f9f7;
+  --ink-primary: #0b0b0b;
+  --ink-secondary: #52514e;
+  --ink-muted: #898781;
+  --hairline: #e1e0d9;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --surface: #1a1a19;
+    --plane: #0d0d0d;
+    --ink-primary: #ffffff;
+    --ink-secondary: #c3c2b7;
+    --ink-muted: #898781;
+    --hairline: #2c2c2a;
+  }
+}
+
 body {
   margin: 0;
-  font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+  font-family: var(--font-sans);
+  background-color: var(--plane);
+  color: var(--ink-primary);
+}
+
+/* Leaflet's default z-index stack can bleed over our own sticky header/modals -- scope it. */
+.leaflet-container {
+  font-family: var(--font-sans);
+  z-index: 0;
+}
+
+/* Category chip -- color set per-instance via inline custom properties (src/theme.ts),
+   fixed per category so it never repaints under filtering/sorting. */
+.theme-chip {
+  background: var(--chip-bg);
+  color: var(--chip-fg);
+}
+@media (prefers-color-scheme: dark) {
+  .theme-chip {
+    background: var(--chip-bg-dark);
+    color: var(--chip-fg-dark);
+  }
 }
