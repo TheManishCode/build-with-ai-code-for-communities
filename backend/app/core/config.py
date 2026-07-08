@@ -7,7 +7,11 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     database_url: str
-    dataset_dir: Path
+    # Only read by the offline app/ingestion/* scripts (run locally against the Dataset/
+    # folder, which isn't part of this repo) -- the deployed web service never touches
+    # dataset_dir, so it must not be required to construct Settings() or every deploy
+    # without it set crashes on import before serving a single request.
+    dataset_dir: Path | None = None
     constituency_name: str = "BAGALKOT"
     constituency_district: str = "Bagalkot"
     anthropic_api_key: str | None = None  # Backup model -- explain() falls back to a template
