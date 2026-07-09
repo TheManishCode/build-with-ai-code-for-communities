@@ -71,10 +71,10 @@
   --text-base: 0.875rem;
   --text-md: 1rem;
   --text-lg: 1.125rem;
-  --text-xl: 1.375rem;
-  --text-2xl: 1.75rem;
-  --text-3xl: 2.25rem;
-  --text-hero: 3rem;
+  --text-xl: clamp(1.125rem, 1.05rem + 0.35vw, 1.375rem);
+  --text-2xl: clamp(1.375rem, 1.2rem + 0.7vw, 1.75rem);
+  --text-3xl: clamp(1.75rem, 1.5rem + 1.1vw, 2.25rem);
+  --text-hero: clamp(2.25rem, 1.85rem + 1.8vw, 3rem);
 
   --leading-tight: 1.2;
   --leading-normal: 1.5;
@@ -190,6 +190,16 @@ input, select, textarea {
   height: 100vh;
   overflow: hidden;
   background: var(--color-bg-primary);
+}
+
+.app-top-rule {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--color-accent);
+  z-index: 51;
 }
 
 .app-sidebar {
@@ -787,13 +797,16 @@ input[type="range"]::-moz-range-thumb {
   .metric-grid {
     grid-template-columns: repeat(2, 1fr);
   }
+}
 
-  .page-title {
-    font-size: var(--text-xl);
+/* ─── Tablet: ease the sidebar/content squeeze before the mobile layout kicks in ── */
+@media (max-width: 1024px) {
+  :root {
+    --sidebar-width: 212px;
   }
 
-  .metric-hero-value {
-    font-size: var(--text-3xl);
+  .app-content {
+    padding: var(--space-6) var(--space-5);
   }
 }
 

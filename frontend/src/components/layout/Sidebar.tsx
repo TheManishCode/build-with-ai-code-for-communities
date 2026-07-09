@@ -9,7 +9,6 @@ import {
   Shield,
   FileText,
   MessageSquarePlus,
-  Bot,
 } from 'lucide-react'
 
 const NAV_SECTIONS = [
@@ -17,7 +16,7 @@ const NAV_SECTIONS = [
     label: 'Overview',
     links: [
       { to: '/', label: 'Dashboard', icon: LayoutDashboard },
-      { to: '/report', label: 'AI Report', icon: FileText },
+      { to: '/report', label: 'Development Report', icon: FileText },
     ],
   },
   {
@@ -33,7 +32,6 @@ const NAV_SECTIONS = [
     label: 'Public',
     links: [
       { to: '/report-issue', label: 'Report an Issue', icon: MessageSquarePlus },
-      { to: '/assistant', label: 'Ask for Help', icon: Bot },
       { to: '/status', label: 'Check My Report', icon: Search },
       { to: '/transparency', label: 'Transparency', icon: Shield },
     ],
@@ -52,24 +50,8 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
       aria-label="Main navigation"
     >
       <div className="sidebar-brand">
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{
-            width: 28,
-            height: 28,
-            borderRadius: 'var(--radius-sm)',
-            background: 'var(--color-accent)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexShrink: 0,
-          }}>
-            <Shield size={15} color="#17130a" strokeWidth={2.5} />
-          </div>
-          <div>
-            <div className="sidebar-brand-name">Civic Intelligence</div>
-            <div className="sidebar-brand-sub">Bagalkot, Karnataka</div>
-          </div>
-        </div>
+        <div className="sidebar-brand-name">MPLADS Portal</div>
+        <div className="sidebar-brand-sub">Bagalkot Constituency, Karnataka</div>
       </div>
 
       {NAV_SECTIONS.map((section) => (
@@ -95,24 +77,6 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
       ))}
 
       <div style={{ flex: 1 }} />
-
-      <div style={{
-        padding: 'var(--space-3) var(--space-5) 0',
-        borderTop: '1px solid var(--color-border-default)',
-        marginTop: 'var(--space-4)',
-        paddingTop: 'var(--space-4)',
-      }}>
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 'var(--space-2)',
-          fontSize: 'var(--text-xs)',
-          color: 'var(--color-text-muted)',
-        }}>
-          <div className="pulse-dot" />
-          <span>Data pipeline active</span>
-        </div>
-      </div>
     </nav>
   )
 }

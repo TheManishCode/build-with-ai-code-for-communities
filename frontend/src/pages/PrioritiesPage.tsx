@@ -138,7 +138,7 @@ export function PrioritiesPage() {
     <PageWrapper>
       <PageHeader
         title="Ranked Priorities"
-        subtitle="AI-scored development works ranked by citizen demand and infrastructure gap analysis"
+        subtitle="Development works ranked by citizen demand and infrastructure gap analysis"
         actions={
           <select
             className="input select"

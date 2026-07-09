@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { Sidebar } from './components/layout/Sidebar'
 import { MobileHeader } from './components/layout/MobileHeader'
+import { ChatWidget } from './components/ChatWidget'
 import { DashboardPage } from './pages/DashboardPage'
 import { PrioritiesPage } from './pages/PrioritiesPage'
 import { MapPage } from './pages/MapPage'
@@ -11,15 +12,15 @@ import { StatusPage } from './pages/StatusPage'
 import { TransparencyPage } from './pages/TransparencyPage'
 import { ReportPage } from './pages/ReportPage'
 import { ReportIssuePage } from './pages/ReportIssuePage'
-import { AssistantPage } from './pages/AssistantPage'
 
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   return (
     <div className="app-shell">
+      <div className="app-top-rule" aria-hidden="true" />
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-      
+
       {/* Mobile overlay */}
       <div
         className={`mobile-overlay ${sidebarOpen ? 'open' : ''}`}
@@ -40,7 +41,6 @@ function App() {
               <Route path="/budget" element={<BudgetPage />} />
               <Route path="/backtest" element={<BacktestPage />} />
               <Route path="/report-issue" element={<ReportIssuePage />} />
-              <Route path="/assistant" element={<AssistantPage />} />
               <Route path="/status" element={<StatusPage />} />
               <Route path="/transparency" element={<TransparencyPage />} />
               <Route path="*" element={<Navigate to="/" replace />} />
@@ -48,6 +48,8 @@ function App() {
           </div>
         </main>
       </div>
+
+      <ChatWidget />
     </div>
   )
 }

@@ -17,7 +17,7 @@ const THEME_COLORS: Record<string, string> = {
 }
 
 const QUICK_LINKS = [
-  { to: '/priorities', label: 'Ranked Priorities', desc: 'AI-scored development works', icon: ListOrdered },
+  { to: '/priorities', label: 'Ranked Priorities', desc: 'Ranked by demand and infrastructure gap', icon: ListOrdered },
   { to: '/map', label: 'Constituency Map', desc: 'Geographic view of villages', icon: Map },
   { to: '/budget', label: 'Budget Simulator', desc: 'Explore allocation scenarios', icon: Wallet },
   { to: '/transparency', label: 'Transparency', desc: 'Public data accounting', icon: Shield },

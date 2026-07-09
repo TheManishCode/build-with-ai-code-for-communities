@@ -43,8 +43,8 @@ export function ReportPage() {
   return (
     <PageWrapper>
       <PageHeader
-        title="AI Intelligence Report"
-        subtitle="Automated constituency analysis synthesized from citizen reports and infrastructure data"
+        title="Constituency Development Report"
+        subtitle="Consolidated analysis of citizen reports, infrastructure gaps, and budget allocation for this MPLADS cycle"
       />
 
       {/* 1. Data summary */}
