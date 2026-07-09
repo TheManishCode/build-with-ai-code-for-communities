@@ -3,6 +3,9 @@ import type {
   AllocationResponse,
   BacktestResponse,
   BoundaryResponse,
+  BudgetEvidenceResponse,
+  ChatMessage,
+  ChatResponse,
   CitizenStatusResponse,
   DivergenceRow,
   DraftLetterResponse,
@@ -33,6 +36,10 @@ export const api = {
     client
       .get<ExplanationResponse>(`/works/${encodeURIComponent(workId)}/explain`, { params: budget != null ? { budget } : {} })
       .then((r) => r.data),
+  budgetEvidence: (workId: string) =>
+    client.get<BudgetEvidenceResponse>(`/works/${encodeURIComponent(workId)}/budget-evidence`).then((r) => r.data),
+  chat: (messages: ChatMessage[]) =>
+    client.post<ChatResponse>('/chat', { messages }).then((r) => r.data),
   citizenStatus: (submissionId: number) =>
     client.get<CitizenStatusResponse>('/citizen/status', { params: { submission_id: submissionId } }).then((r) => r.data),
   transparencySummary: () => client.get<TransparencySummaryResponse>('/transparency/summary').then((r) => r.data),

@@ -25,6 +25,7 @@ from app.core.config import settings
 from app.core.rate_limit import limiter
 from app.models.submission import Channel
 from app.services.intake import process_submission
+from app.services.storage import save_photo
 
 logger = logging.getLogger(__name__)
 
@@ -32,15 +33,26 @@ router = APIRouter(prefix="/submissions", tags=["submissions"])
 
 UPLOAD_DIR = settings.upload_dir
 
-# A failure here (read-only filesystem, permission error) must not crash the whole app at
-# import time -- it should only disable photo uploads. UPLOAD_DIR_AVAILABLE gates both the
+# Local disk is only ever touched as the R2 fallback (see app.services.storage) -- still
+# created eagerly so the fallback path works even when R2 IS configured but a given photo
+# upload fails for some other reason before storage.save_photo is reached. A failure here
+# (read-only filesystem, permission error) must not crash the whole app at import time --
+# it should only disable the local-disk fallback. STORAGE_AVAILABLE gates both the
 # StaticFiles mount in app.main and the photo-handling branch below.
 try:
     UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
     UPLOAD_DIR_AVAILABLE = True
 except OSError:
-    logger.warning("Could not create upload directory %s -- photo uploads will be rejected.", UPLOAD_DIR, exc_info=True)
+    logger.warning("Could not create upload directory %s -- local-disk photo storage unavailable.", UPLOAD_DIR, exc_info=True)
     UPLOAD_DIR_AVAILABLE = False
+
+STORAGE_AVAILABLE = settings.r2_configured or UPLOAD_DIR_AVAILABLE
+
+
+def _to_photo_url(photo_path: str | None) -> str | None:
+    if not photo_path:
+        return None
+    return photo_path if photo_path.startswith(("http://", "https://")) else f"/uploads/{photo_path}"
 
 MAX_TEXT_LENGTH = 2000
 MAX_PHOTO_BYTES = 8 * 1024 * 1024  # 8 MB
@@ -94,7 +106,7 @@ async def submit_report(
 
     photo_path: str | None = None
     if photo is not None and photo.filename:
-        if not UPLOAD_DIR_AVAILABLE:
+        if not STORAGE_AVAILABLE:
             raise HTTPException(status_code=503, detail="Photo uploads are temporarily unavailable; please submit without a photo.")
         if photo.content_type not in ALLOWED_PHOTO_TYPES:
             raise HTTPException(status_code=422, detail="photo must be JPEG, PNG, or WebP")
@@ -107,8 +119,7 @@ async def submit_report(
         # Server-generated filename -- never trust the client's original filename (path
         # traversal, collisions) -- extension is derived from the validated content_type.
         filename = f"{uuid.uuid4().hex}{ALLOWED_PHOTO_TYPES[photo.content_type]}"
-        (UPLOAD_DIR / filename).write_bytes(contents)
-        photo_path = filename
+        photo_path = save_photo(filename, contents, photo.content_type)
 
     result = process_submission(
         db,
@@ -127,7 +138,7 @@ async def submit_report(
         "resolved_village_code": s.resolved_lgd_code,
         "village_name": result.village_name,
         "place_match_score": s.place_match_score,
-        "photo_url": f"/uploads/{s.photo_path}" if s.photo_path else None,
+        "photo_url": _to_photo_url(s.photo_path),
         "issue_id": s.issue_id,
         "created_at": s.created_at.isoformat(),
     }

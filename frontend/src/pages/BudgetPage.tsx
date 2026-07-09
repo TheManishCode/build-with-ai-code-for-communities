@@ -3,10 +3,90 @@ import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { CheckCircle2, XCircle, ChevronDown, ChevronUp, AlertTriangle } from 'lucide-react'
 import { api } from '../api/client'
-import type { ExplanationResponse } from '../api/types'
+import type { BudgetEvidenceResponse, ExplanationResponse } from '../api/types'
 import { PageWrapper, PageHeader } from '../components/ui/PageWrapper'
 import { MetricGrid, Metric } from '../components/ui/StatCard'
 import { LoadingState, ErrorState, Spinner } from '../components/ui/StateDisplays'
+
+function BudgetEvidencePanel({ evidence }: { evidence: BudgetEvidenceResponse }) {
+  return (
+    <div style={{ marginTop: 'var(--space-3)', paddingTop: 'var(--space-3)', borderTop: '1px solid var(--color-border-default)' }}>
+      <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)', lineHeight: 'var(--leading-relaxed)' }}>
+        {evidence.narrative}
+      </p>
+      {evidence.comparables.length > 0 && (
+        <ul style={{ marginTop: 'var(--space-2)', paddingLeft: 'var(--space-5)', listStyle: 'disc' }}>
+          {evidence.comparables.map((c, i) => (
+            <li key={i} style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)', marginTop: 2 }}>
+              {c.work_title} — <span className="tabular-nums">₹{c.amount.toLocaleString('en-IN')}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 'var(--space-2)', gap: 'var(--space-3)', fontSize: '0.625rem', color: 'var(--color-text-muted)' }}>
+        <span>{evidence.note}</span>
+        <span style={{ flexShrink: 0 }}>via {evidence.generation_source}</span>
+      </div>
+    </div>
+  )
+}
+
+function useBudgetEvidence(workId: string) {
+  const [open, setOpen] = useState(false)
+  const [evidence, setEvidence] = useState<BudgetEvidenceResponse | null>(null)
+  const [loading, setLoading] = useState(false)
+
+  const toggle = async () => {
+    if (!open && !evidence) {
+      setLoading(true)
+      try {
+        setEvidence(await api.budgetEvidence(workId))
+      } catch { /* noop */ }
+      setLoading(false)
+    }
+    setOpen(!open)
+  }
+
+  return { open, evidence, loading, toggle }
+}
+
+function FundedWorkRow({ workId, theme, villageName, cost }: {
+  workId: string; theme: string; villageName: string | null; cost: number
+}) {
+  const { open, evidence, loading, toggle } = useBudgetEvidence(workId)
+
+  return (
+    <div className="list-row" style={{ flexDirection: 'column', alignItems: 'stretch', gap: 'var(--space-2)' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+          <span className={`badge badge-${theme}`}>{theme}</span>
+          <span style={{ color: 'var(--color-text-secondary)' }}>{villageName || 'Unknown'}</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+          <span className="tabular-nums" style={{ color: 'var(--color-text-tertiary)', fontSize: 'var(--text-xs)' }}>
+            ₹{cost.toLocaleString('en-IN')}
+          </span>
+          <button onClick={toggle} className="btn btn-ghost btn-sm" style={{ gap: 4, fontSize: 'var(--text-xs)' }}>
+            {loading ? <Spinner size={12} /> : <>{open ? <ChevronUp size={12} /> : <ChevronDown size={12} />} Why this much?</>}
+          </button>
+        </div>
+      </div>
+      <AnimatePresence>
+        {open && evidence && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            style={{ overflow: 'hidden' }}
+          >
+            <BudgetEvidencePanel evidence={evidence} />
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
 
 function ExcludedCard({ workId, theme, villageName, score, budget }: {
   workId: string; theme: string; villageName: string | null; score: number; budget?: number
@@ -14,6 +94,7 @@ function ExcludedCard({ workId, theme, villageName, score, budget }: {
   const [open, setOpen] = useState(false)
   const [explanation, setExplanation] = useState<ExplanationResponse | null>(null)
   const [loading, setLoading] = useState(false)
+  const evidenceState = useBudgetEvidence(workId)
 
   const handleToggle = async () => {
     if (!open && !explanation) {
@@ -39,10 +120,29 @@ function ExcludedCard({ workId, theme, villageName, score, budget }: {
             Score: {Math.round(score * 100)}%
           </span>
         </div>
-        <button onClick={handleToggle} className="btn btn-ghost btn-sm" style={{ gap: 4, fontSize: 'var(--text-xs)' }}>
-          {loading ? <Spinner size={14} /> : <>{open ? <ChevronUp size={14} /> : <ChevronDown size={14} />} Why not funded?</>}
-        </button>
+        <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+          <button onClick={evidenceState.toggle} className="btn btn-ghost btn-sm" style={{ gap: 4, fontSize: 'var(--text-xs)' }}>
+            {evidenceState.loading ? <Spinner size={14} /> : <>{evidenceState.open ? <ChevronUp size={14} /> : <ChevronDown size={14} />} Why this much?</>}
+          </button>
+          <button onClick={handleToggle} className="btn btn-ghost btn-sm" style={{ gap: 4, fontSize: 'var(--text-xs)' }}>
+            {loading ? <Spinner size={14} /> : <>{open ? <ChevronUp size={14} /> : <ChevronDown size={14} />} Why not funded?</>}
+          </button>
+        </div>
       </div>
+
+      <AnimatePresence>
+        {evidenceState.open && evidenceState.evidence && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            style={{ overflow: 'hidden' }}
+          >
+            <BudgetEvidencePanel evidence={evidenceState.evidence} />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <AnimatePresence>
         {open && explanation && (
@@ -198,15 +298,7 @@ export function BudgetPage() {
         </h3>
         <div style={{ padding: '0 var(--space-3) var(--space-3)' }}>
           {current.selected_works.slice(0, 15).map((w) => (
-            <div key={w.work_id} className="list-row">
-              <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
-                <span className={`badge badge-${w.theme}`}>{w.theme}</span>
-                <span style={{ color: 'var(--color-text-secondary)' }}>{w.village_name || 'Unknown'}</span>
-              </div>
-              <span className="tabular-nums" style={{ color: 'var(--color-text-tertiary)', fontSize: 'var(--text-xs)' }}>
-                ₹{w.cost.toLocaleString('en-IN')}
-              </span>
-            </div>
+            <FundedWorkRow key={w.work_id} workId={w.work_id} theme={w.theme} villageName={w.village_name} cost={w.cost} />
           ))}
           {current.selected_works.length > 15 && (
             <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)', textAlign: 'center', padding: 'var(--space-2) 0' }}>

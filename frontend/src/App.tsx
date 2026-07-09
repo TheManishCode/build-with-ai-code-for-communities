@@ -10,6 +10,8 @@ import { BacktestPage } from './pages/BacktestPage'
 import { StatusPage } from './pages/StatusPage'
 import { TransparencyPage } from './pages/TransparencyPage'
 import { ReportPage } from './pages/ReportPage'
+import { ReportIssuePage } from './pages/ReportIssuePage'
+import { AssistantPage } from './pages/AssistantPage'
 
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -37,6 +39,8 @@ function App() {
               <Route path="/map" element={<MapPage />} />
               <Route path="/budget" element={<BudgetPage />} />
               <Route path="/backtest" element={<BacktestPage />} />
+              <Route path="/report-issue" element={<ReportIssuePage />} />
+              <Route path="/assistant" element={<AssistantPage />} />
               <Route path="/status" element={<StatusPage />} />
               <Route path="/transparency" element={<TransparencyPage />} />
               <Route path="*" element={<Navigate to="/" replace />} />

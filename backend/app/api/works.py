@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
 from app.core.ranking_config import ranking_config
+from app.services.budget_evidence import get_budget_evidence
 from app.services.explain import explain_work
 from app.services.letter import generate_draft_letter
 from app.services.quotes import get_source_quotes
@@ -72,6 +73,16 @@ def get_rejection_explanation(work_id: str, db: Session = Depends(get_db), budge
     Bagalkot's real current MPLADs limit, same as GET /allocation."""
     effective_budget = budget if budget is not None else _default_mplads_budget(db)
     result = explain_work(db, work_id, effective_budget)
+    if result is None:
+        raise HTTPException(status_code=404, detail=f"work_id {work_id!r} not found in current ranking")
+    return result
+
+
+@router.get("/{work_id}/budget-evidence")
+def get_work_budget_evidence(work_id: str, db: Session = Depends(get_db)) -> dict:
+    """Real comparable evidence for a work's cost estimate -- see
+    app.services.budget_evidence module docstring."""
+    result = get_budget_evidence(db, work_id)
     if result is None:
         raise HTTPException(status_code=404, detail=f"work_id {work_id!r} not found in current ranking")
     return result

@@ -8,6 +8,8 @@ import {
   Search,
   Shield,
   FileText,
+  MessageSquarePlus,
+  Bot,
 } from 'lucide-react'
 
 const NAV_SECTIONS = [
@@ -30,6 +32,8 @@ const NAV_SECTIONS = [
   {
     label: 'Public',
     links: [
+      { to: '/report-issue', label: 'Report an Issue', icon: MessageSquarePlus },
+      { to: '/assistant', label: 'Ask for Help', icon: Bot },
       { to: '/status', label: 'Check My Report', icon: Search },
       { to: '/transparency', label: 'Transparency', icon: Shield },
     ],

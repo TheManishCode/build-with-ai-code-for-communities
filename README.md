@@ -129,6 +129,15 @@ CONSTITUENCY_DISTRICT=Bagalkot
 # Without either key, it falls back to a deterministic template automatically.
 NVIDIA_NIM_API_KEY=
 ANTHROPIC_API_KEY=
+
+# Optional -- persistent storage for citizen-submitted photos (services/storage.py).
+# Without these, photo uploads fall back to local disk (fine for local dev, not for a
+# real deployment -- see Known limitations).
+R2_ACCOUNT_ID=
+R2_ACCESS_KEY_ID=
+R2_SECRET_ACCESS_KEY=
+R2_BUCKET_NAME=
+R2_PUBLIC_BASE_URL=
 ```
 
 Run migrations, then ingest the datasets in order (each script fuzzy-matches its
@@ -221,6 +230,11 @@ everything else is read-only `GET`. It is hardened as follows:
   spoofable. A mismatch (e.g. a text file renamed to `.jpg`) is rejected.
 - **Path-safe file storage** -- uploaded photos are written under server-generated UUID
   filenames; the client's original filename is never used on disk.
+- **Persistent photo storage** -- uploads go to Cloudflare R2 (S3-compatible,
+  `backend/app/services/storage.py`) when `R2_ACCOUNT_ID`/`R2_ACCESS_KEY_ID`/
+  `R2_SECRET_ACCESS_KEY`/`R2_BUCKET_NAME`/`R2_PUBLIC_BASE_URL` are set, so photos survive
+  a redeploy. Falls back to local disk (the original behavior) when R2 isn't configured
+  -- local dev and the test suite don't need real R2 credentials.
 - **Security headers** -- `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`,
   `Referrer-Policy: strict-origin-when-cross-origin` on every response.
 - **Request size guard** -- requests over 12MB are rejected before multipart parsing runs,
@@ -254,10 +268,10 @@ accounts to report a problem.
   per IP, see Security below) but that's abuse-mitigation, not identity. `GET
   /citizen/status` takes a plain sequential integer ID with no access control -- the
   correct fix is an opaque per-submission token issued at intake time.
-- **Uploaded photos live on local ephemeral disk** (`settings.upload_dir`, OS-temp-backed
-  by default), not persistent or object storage -- they're lost on redeploy/restart and
-  wouldn't be visible across multiple horizontally-scaled instances. Fine at demo scale;
-  a real deployment needs S3-compatible storage.
+- **Uploaded photos live on local ephemeral disk when R2 isn't configured**
+  (`settings.upload_dir`, OS-temp-backed by default) -- lost on redeploy/restart, not
+  visible across multiple horizontally-scaled instances. Set the `R2_*` env vars (see
+  Security, above) for a real deployment; without them this is still demo-scale-only.
 - **Issue re-clustering on every submission is a full rebuild**, not an incremental
   update (`app.services.intake` calls `app.ingestion.build_issues.run()`). Cheap at
   Bagalkot's current data volume since embeddings are precomputed and stored -- no

@@ -9,6 +9,7 @@ pydantic-settings
 python-dotenv
 python-multipart
 slowapi
+boto3
 
 pandas
 openpyxl

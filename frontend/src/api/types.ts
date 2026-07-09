@@ -119,6 +119,20 @@ export interface ExplanationResponse {
   fallback_reason?: string | null
 }
 
+export interface BudgetEvidenceResponse {
+  work_id: string
+  theme: string
+  estimate: number | null
+  comparables: Array<{ work_title: string; amount: number }>
+  median_amount: number | null
+  min_amount: number | null
+  max_amount: number | null
+  note: string
+  narrative: string
+  generation_source: 'nvidia' | 'claude' | 'template'
+  fallback_reason: string | null
+}
+
 export interface TransparencySummaryResponse {
   total_submissions: number
   total_issues: number
@@ -175,4 +189,14 @@ export interface SubmissionResponse {
   photo_url: string | null
   issue_id: number | null
   created_at: string
+}
+
+export interface ChatMessage {
+  role: 'user' | 'assistant'
+  content: string
+}
+
+export interface ChatResponse {
+  reply: string
+  sources: string[]
 }

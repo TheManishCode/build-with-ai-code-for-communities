@@ -10,6 +10,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from app.api.allocation import router as allocation_router
 from app.api.backtest import router as backtest_router
 from app.api.boundary import router as boundary_router
+from app.api.chat import router as chat_router
 from app.api.citizen import router as citizen_router
 from app.api.divergence import router as divergence_router
 from app.api.issues import router as issues_router
@@ -57,8 +58,8 @@ app.add_middleware(MaxBodySizeMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origin_list,
-    # POST is scoped to /submissions alone in practice (every other route in app/api/*.py
-    # is a @router.get) -- the sole live citizen-intake write path.
+    # POST is used by /submissions (citizen intake) and /chat (the assistant) -- every
+    # other route in app/api/*.py is a @router.get.
     allow_methods=["GET", "POST", "HEAD", "OPTIONS"],
     allow_headers=["*"],
 )
@@ -76,6 +77,7 @@ app.include_router(boundary_router)
 app.include_router(citizen_router)
 app.include_router(transparency_router)
 app.include_router(submissions_router)
+app.include_router(chat_router)
 
 
 @app.get("/health")

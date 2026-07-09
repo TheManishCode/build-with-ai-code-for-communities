@@ -27,16 +27,32 @@ class Settings(BaseSettings):
     # -- configurable so a real deployment doesn't need a code change to add its own origin.
     cors_origins: str = "http://localhost:5173"
 
-    # Where citizen-submitted photos (POST /submissions) are stored. Defaults to the OS temp
-    # dir rather than inside the app source tree -- many deploy platforms ship app source
-    # read-only, and the temp dir is reliably writable (though ephemeral/non-persistent
-    # across redeploys -- see README's Known limitations). Override via env for a real
-    # persistent-disk or object-storage mount.
+    # Where citizen-submitted photos (POST /submissions) are stored when R2 (below) isn't
+    # configured. Defaults to the OS temp dir rather than inside the app source tree -- many
+    # deploy platforms ship app source read-only, and the temp dir is reliably writable
+    # (though ephemeral/non-persistent across redeploys). This is the local-dev/test path;
+    # a real deployment should set the R2 variables below instead.
     upload_dir: Path = Path(tempfile.gettempdir()) / "peoples_priorities_uploads"
+
+    # Cloudflare R2 (S3-compatible) -- persistent photo storage for a real deployment.
+    # All optional, same "degrade rather than crash" posture as the LLM keys above:
+    # app.services.storage falls back to local disk (upload_dir) when these aren't set.
+    r2_account_id: str | None = None
+    r2_access_key_id: str | None = None
+    r2_secret_access_key: str | None = None
+    r2_bucket_name: str | None = None
+    r2_public_base_url: str | None = None  # public URL prefix the uploaded object is served from
 
     @property
     def cors_origin_list(self) -> list[str]:
         return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
+
+    @property
+    def r2_configured(self) -> bool:
+        return bool(
+            self.r2_account_id and self.r2_access_key_id and self.r2_secret_access_key
+            and self.r2_bucket_name and self.r2_public_base_url
+        )
 
 
 settings = Settings()
