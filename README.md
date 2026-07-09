@@ -22,12 +22,19 @@ letter generation, a rejection explainer, and backtesting against historical MPL
 spending — all running against real Bagalkot data (Census 2011, LGD, PMGSY, MPLADS,
 village amenities).
 
-**Citizen intake is not live.** The data model anticipates voice/text/photo
-submissions (see `Submission.channel`), but there is no submission endpoint, no
-speech-to-text or image pipeline, and no messaging-app integration. All ~60
-submissions in the system come from `backend/app/ingestion/seed_submissions.py`, a
-synthetic generator standing in for real intake so the rest of the pipeline has data
-to run against. Building a real intake channel is the natural next step.
+**Citizen intake is live on the backend.** `POST /submissions`
+(`backend/app/api/submissions.py`) accepts a real report — text, or voice transcribed
+to text client-side via the browser's Web Speech API, or a photo with a caption — runs
+it through the same NLP pipeline used to seed demo data (translate → classify theme →
+extract and fuzzy-match the place name to an LGD village → geocode → embed), stores it,
+and rebuilds issue clusters synchronously so the new report is reflected in the ranking
+immediately. The 58 seeded submissions from `backend/app/ingestion/seed_submissions.py`
+still provide baseline demo volume alongside whatever comes in live. The frontend's
+"Report an Issue" form is being rebuilt against the redesigned UI (see Architecture)
+and is not yet wired up — `api/client.ts`'s `submitReport()` already targets the live
+endpoint. **Not built**: a WhatsApp/Telegram/SMS gateway (the API is channel-agnostic
+and could sit behind one, but no bot integration exists), and photo submissions are
+stored and displayed as evidence rather than analyzed by a vision model.
 
 ## Architecture
 
@@ -43,8 +50,16 @@ source code/
                              the rejection explainer, transparency summary
       api/                  FastAPI routers, one per resource
     alembic/                Schema migrations
-    tests/                  56 tests against the live database (see Testing, below)
-  frontend/                 React + Vite + TanStack Query + Tailwind + Leaflet
+    tests/                  64 tests against the live database (see Testing, below)
+  frontend/                 React + Vite + TanStack Query + React Router + Tailwind + Leaflet
+    src/pages/               One page per route (dashboard, AI report, ranked priorities,
+                             map, budget simulator, backtest, report an issue, check my
+                             report, transparency)
+    src/components/ui/       Shared primitives (PageWrapper/PageHeader, Metric/MetricGrid,
+                             loading/error/empty states) every page is built from
+    src/index.css            Design tokens -- near-black flat surfaces, one reserved
+                             accent, a fixed CVD-validated categorical palette for theme
+                             charts (see Frontend design system, below)
 ```
 
 Citizen submissions are deduplicated into **issues** (same village + theme), scored on
@@ -54,6 +69,28 @@ infrastructure shortfall vs. the constituency, from Census/amenities data) — t
 combined into a composite score. Villages with a high gap but no citizen reports still
 surface as "silent need" candidates. A knapsack allocator selects the highest-value
 combination of works that fits the MP's real MPLADS budget.
+
+### Frontend design system
+
+Deliberately flat and restrained rather than the glassmorphism/gradient-heavy look a
+first pass at this kind of dashboard tends toward:
+
+- **Palette** (`src/index.css`) -- near-black neutral surfaces (not navy), hairline
+  1px borders instead of blurred glass panels, and exactly one reserved accent (warm
+  gold) for interactive/primary elements. Theme categories (water/road/school/health/
+  electricity/sanitation) get a fixed six-color categorical palette validated for CVD
+  separation (`node scripts/validate_palette.js` from the `dataviz` skill) rather than
+  ad hoc hex picks; a separate status palette (good/warning/serious/critical) never
+  doubles as a category color.
+- **Type** -- Inter throughout (Google Fonts link in `index.html`), a real size scale
+  with tighter tracking on headings, tabular numerals only in table/axis columns (large
+  standalone figures use proportional numerals).
+- **Layout** -- flush `metric-grid` cells with hairline dividers instead of individually
+  bordered/shadowed stat tiles with a big colored icon per card; a single subtle
+  fade-and-rise on page mount rather than staggered per-element entrance animation.
+- **Routing** -- per-section URLs (`/`, `/report`, `/priorities`, `/map`, `/budget`,
+  `/backtest`, `/status`, `/transparency`) via React Router; no code-splitting yet (the
+  bundle is under 700kB gzipped ~200kB, not worth it at this size).
 
 ## Setup
 
@@ -140,6 +177,7 @@ npm run dev      # http://localhost:5173
 
 | Endpoint | Purpose |
 |---|---|
+| `POST /submissions` | Live citizen intake -- text, browser-transcribed voice, or a photo + caption |
 | `GET /villages` | Village-level facts (demographics, infrastructure gaps) |
 | `GET /issues` | Deduplicated citizen issues |
 | `GET /works` | Ranked candidate development works, with source quotes |
@@ -157,9 +195,10 @@ Full interactive docs at `http://localhost:8000/docs` once the backend is runnin
 ## Testing
 
 ```bash
-# backend -- 56 tests against the live database (no mock DB; this is a deliberate
+# backend -- 64 tests against the live database (no mock DB; this is a deliberate
 # choice for a dataset-driven project where the interesting bugs are in the data,
-# not the plumbing)
+# not the plumbing). Tests that POST to /submissions clean up the rows they create
+# (and rebuild issue clusters) so the shared seed dataset stays pristine.
 cd backend && python -m pytest tests/
 
 # lint
@@ -171,13 +210,59 @@ npm run lint                    # oxlint
 npm run build                   # tsc + vite build
 ```
 
+## Security
+
+`POST /submissions` is the API's only write path and the only meaningful attack surface;
+everything else is read-only `GET`. It is hardened as follows:
+
+- **Rate limiting** -- 10 requests/minute per IP (`slowapi`, `backend/app/core/rate_limit.py`).
+- **Real photo validation** -- uploads are checked against their actual file-signature
+  ("magic bytes"), not just the client-supplied `Content-Type` header, which is trivially
+  spoofable. A mismatch (e.g. a text file renamed to `.jpg`) is rejected.
+- **Path-safe file storage** -- uploaded photos are written under server-generated UUID
+  filenames; the client's original filename is never used on disk.
+- **Security headers** -- `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`,
+  `Referrer-Policy: strict-origin-when-cross-origin` on every response.
+- **Request size guard** -- requests over 12MB are rejected before multipart parsing runs,
+  ahead of the endpoint's own per-field limits (2000 chars of text, 8MB per photo).
+- **CORS** is scoped to `GET`/`POST`/`HEAD`/`OPTIONS` and an explicit origin allowlist
+  (`CORS_ORIGINS`), not `*`.
+- **SQL** is 100% parameterized (SQLAlchemy ORM or bound `text()` params) -- no raw string
+  interpolation into a query anywhere in the codebase.
+- **Secrets** (`DATABASE_URL`, API keys) live only in `.env`, which is gitignored, and are
+  never logged or returned in any API response.
+- **Dependency audit**: `npm audit` (frontend) reports 0 vulnerabilities; `pip-audit`
+  (backend) flags `deep-translator` against a 2022 one-time account-compromise advisory
+  with no upper version bound -- verified via PyPI release metadata that the installed
+  version postdates the incident by nine months under the recovered legitimate maintainer
+  (see the git history for the full writeup).
+
+Not done, and why: full authn/authz is out of scope for this demo (see Known limitations)
+-- rate limiting mitigates abuse of the one write path without requiring citizens to create
+accounts to report a problem.
+
 ## Known limitations
 
-- **No live citizen intake** (see above) — the single largest gap versus a full
-  end-to-end deployment.
-- **No authentication anywhere.** `GET /citizen/status` takes a plain sequential
-  integer ID with no access control; the correct fix is an opaque per-submission
-  token issued at intake time, which doesn't exist without a real intake endpoint.
+- **No messaging-app gateway.** Citizens can report via the web form (text, browser
+  speech-to-text, or photo+caption), but there is no WhatsApp/Telegram/SMS bot -- the
+  API is channel-agnostic and could sit behind one, but that integration doesn't exist.
+- **Photos are stored as evidence, not analyzed.** A submitted photo is saved and
+  displayed alongside the report; there is no vision model extracting information from
+  the image itself (e.g. reading a meter, assessing road damage severity).
+- **No authentication anywhere.** `POST /submissions` is unauthenticated (anyone can
+  submit; fine for a demo, not for a public deployment) -- it is rate-limited (10/minute
+  per IP, see Security below) but that's abuse-mitigation, not identity. `GET
+  /citizen/status` takes a plain sequential integer ID with no access control -- the
+  correct fix is an opaque per-submission token issued at intake time.
+- **Uploaded photos live on local ephemeral disk** (`settings.upload_dir`, OS-temp-backed
+  by default), not persistent or object storage -- they're lost on redeploy/restart and
+  wouldn't be visible across multiple horizontally-scaled instances. Fine at demo scale;
+  a real deployment needs S3-compatible storage.
+- **Issue re-clustering on every submission is a full rebuild**, not an incremental
+  update (`app.services.intake` calls `app.ingestion.build_issues.run()`). Cheap at
+  Bagalkot's current data volume since embeddings are precomputed and stored -- no
+  model calls happen during the rebuild -- but it's O(total submissions) per new
+  report, worth revisiting before a much larger submission volume.
 - **No caching layer.** Every request recomputes the ranking from Postgres; fine at
   Bagalkot's current data volume, worth revisiting before scaling to more
   constituencies or a much larger submission volume.

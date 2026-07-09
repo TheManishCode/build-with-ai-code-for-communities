@@ -12,6 +12,10 @@ npm run build     # tsc -b && vite build
 ```
 
 `src/api/client.ts` is the single point of contact with the backend; `VITE_API_BASE` in
-`.env` controls which backend it talks to. `src/components/` holds one component per
-section of the app (ranked list, map, budget simulator, backtest, citizen status
-lookup, transparency dashboard).
+`.env` controls which backend it talks to. `src/pages/` holds one page per route
+(dashboard, AI report, ranked priorities, map, budget simulator, backtest, report an
+issue, check my report, transparency); `src/components/ui/` holds the shared primitives
+(`PageWrapper`/`PageHeader`, `Metric`/`MetricGrid`, loading/error/empty states) every page
+is built from, and `src/index.css`'s design tokens section (near-black flat surfaces, one
+reserved accent, a fixed categorical palette for theme charts) is where to change a color
+-- not in individual components. Icons are `lucide-react`.

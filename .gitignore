@@ -26,6 +26,9 @@ frontend/.vite/
 .env
 .env.*
 *.log
+
+# Citizen-uploaded photos (POST /submissions) -- runtime data, not source
+backend/app/static/uploads/
 .DS_Store
 .ipynb_checkpoints/
 .idea/
