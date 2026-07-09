@@ -51,7 +51,13 @@ source code/
       api/                  FastAPI routers, one per resource
     alembic/                Schema migrations
     tests/                  64 tests against the live database (see Testing, below)
-  frontend/                 React + Vite + TanStack Query + Tailwind + Leaflet
+  frontend/                 React + Vite + TanStack Query + React Router + Tailwind + Leaflet + motion
+    src/theme.ts             Design tokens (validated categorical/status palette, chart
+                             chrome) -- single source of truth for raw-hex consumers
+                             (SVG charts, the Leaflet map)
+    src/components/ui/       Shared primitives (Card, Badge, Button, StatTile, Meter,
+                             InfoTooltip, BarChart, LineChart) every page is built from
+    src/components/layout/   AppShell -- masthead, section nav, route transition
 ```
 
 Citizen submissions are deduplicated into **issues** (same village + theme), scored on
@@ -61,6 +67,33 @@ infrastructure shortfall vs. the constituency, from Census/amenities data) — t
 combined into a composite score. Villages with a high gap but no citizen reports still
 surface as "silent need" candidates. A knapsack allocator selects the highest-value
 combination of works that fits the MP's real MPLADS budget.
+
+### Frontend design system
+
+The UI is a "civic register" rather than a generic admin dashboard: a public, auditable
+ledger of development priorities for a specific constituency, not a SaaS product. That's
+reflected directly in the palette and type choices rather than a default Tailwind
+grey/blue theme:
+
+- **Palette** (`src/index.css`, `src/theme.ts`) -- basalt ink and quarry-stone paper as
+  neutrals, a register-indigo accent for interactive chrome, and a sandstone-gold
+  secondary accent reserved for numerals, rules, and the seal mark (never used for
+  anything clickable, so it can't be mistaken for an affordance). The good/warning/critical
+  semantic trio is a deliberately separate hue family from both accents. The seven category
+  colors (water/sanitation/electricity/school/road/health/other) are fixed, not derived
+  from array order, so a filtered or re-sorted list never repaints a theme's color.
+- **Type** -- Fraunces (display, used sparingly for page titles and score numerals) paired
+  with Public Sans (body/UI), self-hosted via `@fontsource` rather than a CDN link. Quote
+  blocks carrying a citizen's original-language text get a `:lang()`-scoped fallback stack
+  for Kannada/Devanagari script.
+- **Motion** (`src/lib/motion.ts`, the `motion` package) -- used deliberately, not
+  decoratively: a shared route-transition rise-and-settle, a list stagger for ranked
+  results, a spring-animated meter/bar fill, and a `layoutId` shared-element indicator on
+  the report-mode selector. Respects `prefers-reduced-motion` throughout.
+- **Routing** -- real per-section URLs (`/report`, `/works`, `/map`, `/status/:id`, ...) via
+  React Router, so a citizen's status page is a shareable link rather than client-only tab
+  state. Every section except the default report form is route-split (`React.lazy`), since
+  the map alone pulls in Leaflet and most first-time visitors only need the report form.
 
 ## Setup
 
@@ -180,6 +213,37 @@ npm run lint                    # oxlint
 npm run build                   # tsc + vite build
 ```
 
+## Security
+
+`POST /submissions` is the API's only write path and the only meaningful attack surface;
+everything else is read-only `GET`. It is hardened as follows:
+
+- **Rate limiting** -- 10 requests/minute per IP (`slowapi`, `backend/app/core/rate_limit.py`).
+- **Real photo validation** -- uploads are checked against their actual file-signature
+  ("magic bytes"), not just the client-supplied `Content-Type` header, which is trivially
+  spoofable. A mismatch (e.g. a text file renamed to `.jpg`) is rejected.
+- **Path-safe file storage** -- uploaded photos are written under server-generated UUID
+  filenames; the client's original filename is never used on disk.
+- **Security headers** -- `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`,
+  `Referrer-Policy: strict-origin-when-cross-origin` on every response.
+- **Request size guard** -- requests over 12MB are rejected before multipart parsing runs,
+  ahead of the endpoint's own per-field limits (2000 chars of text, 8MB per photo).
+- **CORS** is scoped to `GET`/`POST`/`HEAD`/`OPTIONS` and an explicit origin allowlist
+  (`CORS_ORIGINS`), not `*`.
+- **SQL** is 100% parameterized (SQLAlchemy ORM or bound `text()` params) -- no raw string
+  interpolation into a query anywhere in the codebase.
+- **Secrets** (`DATABASE_URL`, API keys) live only in `.env`, which is gitignored, and are
+  never logged or returned in any API response.
+- **Dependency audit**: `npm audit` (frontend) reports 0 vulnerabilities; `pip-audit`
+  (backend) flags `deep-translator` against a 2022 one-time account-compromise advisory
+  with no upper version bound -- verified via PyPI release metadata that the installed
+  version postdates the incident by nine months under the recovered legitimate maintainer
+  (see the git history for the full writeup).
+
+Not done, and why: full authn/authz is out of scope for this demo (see Known limitations)
+-- rate limiting mitigates abuse of the one write path without requiring citizens to create
+accounts to report a problem.
+
 ## Known limitations
 
 - **No messaging-app gateway.** Citizens can report via the web form (text, browser
@@ -188,10 +252,15 @@ npm run build                   # tsc + vite build
 - **Photos are stored as evidence, not analyzed.** A submitted photo is saved and
   displayed alongside the report; there is no vision model extracting information from
   the image itself (e.g. reading a meter, assessing road damage severity).
-- **No authentication anywhere.** `POST /submissions` is unauthenticated and rate-limit-
-  free (anyone can submit; fine for a demo, not for a public deployment), and
-  `GET /citizen/status` takes a plain sequential integer ID with no access control --
-  the correct fix is an opaque per-submission token issued at intake time.
+- **No authentication anywhere.** `POST /submissions` is unauthenticated (anyone can
+  submit; fine for a demo, not for a public deployment) -- it is rate-limited (10/minute
+  per IP, see Security below) but that's abuse-mitigation, not identity. `GET
+  /citizen/status` takes a plain sequential integer ID with no access control -- the
+  correct fix is an opaque per-submission token issued at intake time.
+- **Uploaded photos live on local ephemeral disk** (`settings.upload_dir`, OS-temp-backed
+  by default), not persistent or object storage -- they're lost on redeploy/restart and
+  wouldn't be visible across multiple horizontally-scaled instances. Fine at demo scale;
+  a real deployment needs S3-compatible storage.
 - **Issue re-clustering on every submission is a full rebuild**, not an incremental
   update (`app.services.intake` calls `app.ingestion.build_issues.run()`). Cheap at
   Bagalkot's current data volume since embeddings are precomputed and stored -- no

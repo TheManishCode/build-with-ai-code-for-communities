@@ -1,27 +1,44 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { useNavigate, useParams } from 'react-router-dom'
+import { CheckCircle2, Clock, Search } from 'lucide-react'
+import { motion } from 'motion/react'
 import { api } from '../api/client'
+import { Card } from './ui/Card'
+import { Button } from './ui/Button'
+import { StatusBadge } from './ui/Badge'
+import { PageHeader } from './ui/PageState'
+import { springy } from '../lib/motion'
 
-export function CitizenStatusLookup({ initialSubmissionId }: { initialSubmissionId?: number } = {}) {
-  const [inputValue, setInputValue] = useState(initialSubmissionId != null ? String(initialSubmissionId) : '')
-  const [submittedId, setSubmittedId] = useState<number | null>(initialSubmissionId ?? null)
+export function CitizenStatusLookup() {
+  const { submissionId: paramId } = useParams<{ submissionId?: string }>()
+  const navigate = useNavigate()
+  const [inputValue, setInputValue] = useState(paramId ?? '')
+
+  useEffect(() => {
+    if (paramId) setInputValue(paramId)
+  }, [paramId])
+
+  const submittedId = paramId != null && paramId !== '' ? Number(paramId) : null
+  const validId = submittedId != null && Number.isFinite(submittedId) && submittedId > 0
 
   const { data, isFetching, error } = useQuery({
     queryKey: ['citizen-status', submittedId],
     queryFn: () => api.citizenStatus(submittedId!),
-    enabled: submittedId !== null,
+    enabled: validId,
     retry: false,
   })
 
   const handleLookup = () => {
     const id = Number(inputValue)
-    if (Number.isFinite(id) && id > 0) setSubmittedId(id)
+    if (Number.isFinite(id) && id > 0) navigate(`/status/${id}`)
   }
 
+  const tone = data?.is_funded_this_cycle ? 'good' : data?.funding_tier.startsWith('High Priority') ? 'warning' : 'neutral'
+
   return (
-    <div className="mx-auto max-w-lg p-4">
-      <h2 className="mb-1 text-lg font-semibold text-gray-900 dark:text-gray-100">Check Your Report Status</h2>
-      <p className="mb-4 text-sm text-gray-500">Enter your submission ID to see what happened to your report.</p>
+    <div className="mx-auto max-w-lg px-4">
+      <PageHeader title="Check Your Report Status" subtitle="Enter your submission ID to see what happened to your report." />
 
       <label htmlFor="submission-id-input" className="sr-only">
         Submission ID
@@ -34,55 +51,48 @@ export function CitizenStatusLookup({ initialSubmissionId }: { initialSubmission
           onChange={(e) => setInputValue(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleLookup()}
           placeholder="Submission ID, e.g. 54"
-          className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+          className="flex-1 rounded-md border border-stone-300 bg-stone-50 px-3 py-2 text-sm dark:border-stone-700 dark:bg-stone-900 dark:text-stone-100"
         />
-        <button
-          onClick={handleLookup}
-          className="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700 dark:bg-gray-100 dark:text-gray-900"
-        >
+        <Button onClick={handleLookup} className="flex items-center gap-1.5">
+          <Search size={14} aria-hidden="true" />
           Check Status
-        </button>
+        </Button>
       </div>
 
-      {isFetching && <p className="mt-4 text-sm text-gray-400">Looking up your report...</p>}
+      {isFetching && <p className="mt-4 text-sm text-stone-400">Looking up your report...</p>}
 
       {error && (
-        <div className="mt-4 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-300">
+        <div className="mt-4 rounded-md border border-critical/20 bg-critical/5 p-3 text-sm text-critical dark:bg-critical/10">
           No submission found with that ID. Double-check the number and try again.
         </div>
       )}
 
       {data && (
-        <div className="mt-4 rounded-lg border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-800">
-          <div className="mb-3 flex items-center justify-between">
-            <span className="text-sm font-medium text-gray-500">Submission #{data.submission_id}</span>
-            <span
-              className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                data.is_funded_this_cycle
-                  ? 'bg-green-100 text-green-800'
-                  : data.funding_tier.startsWith('High Priority')
-                    ? 'bg-amber-100 text-amber-800'
-                    : 'bg-gray-100 text-gray-800'
-              }`}
-            >
-              {data.funding_tier}
-            </span>
-          </div>
+        <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={springy}>
+          <Card className="mt-4 p-5">
+            <div className="mb-3 flex items-center justify-between">
+              <span className="text-sm font-medium text-stone-500 dark:text-stone-400">Submission #{data.submission_id}</span>
+              <StatusBadge tone={tone}>
+                {tone === 'good' ? <CheckCircle2 size={12} aria-hidden="true" /> : <Clock size={12} aria-hidden="true" />}
+                {data.funding_tier}
+              </StatusBadge>
+            </div>
 
-          <p className="text-sm leading-relaxed text-gray-700 dark:text-gray-300">{data.status_message}</p>
+            <p className="text-sm leading-relaxed text-stone-700 dark:text-stone-300">{data.status_message}</p>
 
-          <div className="mt-4 grid grid-cols-2 gap-3 border-t border-gray-100 pt-4 text-sm dark:border-gray-700">
-            <Field label="Village" value={data.village ?? '—'} />
-            <Field label="Taluk" value={data.taluk ?? '—'} />
-            <Field label="Theme" value={data.theme ?? '—'} />
-            <Field label="Dedup group" value={data.dedup_group_id != null ? `#${data.dedup_group_id}` : '—'} />
-            <Field label="Merged reports" value={data.corroboration_count != null ? String(data.corroboration_count) : '—'} />
-            <Field
-              label="Current rank"
-              value={data.current_rank != null ? `#${data.current_rank} of ${data.total_works_ranked}` : '—'}
-            />
-          </div>
-        </div>
+            <div className="mt-4 grid grid-cols-2 gap-3 border-t border-stone-200 pt-4 text-sm dark:border-stone-800">
+              <Field label="Village" value={data.village ?? '—'} />
+              <Field label="Taluk" value={data.taluk ?? '—'} />
+              <Field label="Theme" value={data.theme ?? '—'} />
+              <Field label="Dedup group" value={data.dedup_group_id != null ? `#${data.dedup_group_id}` : '—'} />
+              <Field label="Merged reports" value={data.corroboration_count != null ? String(data.corroboration_count) : '—'} />
+              <Field
+                label="Current rank"
+                value={data.current_rank != null ? `#${data.current_rank} of ${data.total_works_ranked}` : '—'}
+              />
+            </div>
+          </Card>
+        </motion.div>
       )}
     </div>
   )
@@ -91,8 +101,8 @@ export function CitizenStatusLookup({ initialSubmissionId }: { initialSubmission
 function Field({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <div className="text-xs text-gray-400">{label}</div>
-      <div className="font-medium text-gray-900 dark:text-gray-100">{value}</div>
+      <div className="text-xs text-stone-400">{label}</div>
+      <div className="font-medium tabular-nums text-stone-900 dark:text-stone-100">{value}</div>
     </div>
   )
 }

@@ -1,11 +1,174 @@
 @import "tailwindcss";
 @import "leaflet/dist/leaflet.css";
 
-html, body, #root {
+/* Display face used sparingly for headlines, page titles, and large score numerals --
+   only the weights actually referenced in components are imported, to keep this light for
+   citizens on slower connections. */
+@import "@fontsource/fraunces/latin-500.css";
+@import "@fontsource/fraunces/latin-500-italic.css";
+@import "@fontsource/fraunces/latin-600.css";
+@import "@fontsource/fraunces/latin-900.css";
+
+/* Body/UI face -- Public Sans, drawn from the US Web Design System: a humanist grotesk built
+   for civic services rather than product marketing, which fits a public constituency register
+   better than a generic startup sans. */
+@import "@fontsource/public-sans/latin-400.css";
+@import "@fontsource/public-sans/latin-500.css";
+@import "@fontsource/public-sans/latin-600.css";
+@import "@fontsource/public-sans/latin-700.css";
+
+/*
+ * Design tokens -- "civic register" system. Grounded in Bagalkot's own material palette
+ * (basalt ink, quarry-stone paper, sandstone accent) rather than a generic SaaS blue, since
+ * this app's actual job is to be a public, auditable register of development priorities.
+ * Mirrors src/theme.ts, which holds the same values as raw hex for SVG/canvas surfaces
+ * (charts, the Leaflet map) that can't consume Tailwind/CSS custom properties directly.
+ */
+@theme {
+  --font-display: "Fraunces", ui-serif, Georgia, serif;
+  --font-sans: "Public Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Consolas, monospace;
+
+  /* Register indigo -- primary interactive/brand hue. Chosen so it never collides with the
+     good/warning/critical semantic trio (see dataviz guidance: semantic color must stay
+     separate from the accent hue). */
+  --color-accent-50: #eef1f6;
+  --color-accent-100: #dce3ee;
+  --color-accent-200: #b7c6de;
+  --color-accent-300: #8fa3c4;
+  --color-accent-400: #6883a8;
+  --color-accent-500: #4a6690;
+  --color-accent-600: #384f73;
+  --color-accent-700: #2f3e5c;
+  --color-accent-800: #232e45;
+  --color-accent-900: #181f30;
+
+  /* Sandstone -- secondary, decorative accent for numerals, rules, and the seal mark. Never
+     used for interactive chrome, so it can't be mistaken for a clickable affordance. */
+  --color-gold-50: #fbf4e7;
+  --color-gold-100: #f3e3c4;
+  --color-gold-200: #e6c687;
+  --color-gold-300: #d4a752;
+  --color-gold-400: #be8a34;
+  --color-gold-500: #a2752b;
+  --color-gold-600: #7e5b21;
+  --color-gold-700: #5f451a;
+  --color-gold-800: #453212;
+  --color-gold-900: #2c1f0b;
+
+  /* Warm stone scale -- replaces a default cool grey everywhere in this app; picked to read
+     as one material with the paper ground rather than an unrelated UI-chrome grey. */
+  --color-stone-50: #f7f4ec;
+  --color-stone-100: #ece7dc;
+  --color-stone-200: #ddd5c2;
+  --color-stone-300: #c3bba2;
+  --color-stone-400: #a69c82;
+  --color-stone-500: #86806c;
+  --color-stone-600: #6b6552;
+  --color-stone-700: #55503f;
+  --color-stone-800: #38352a;
+  --color-stone-900: #201c16;
+  --color-stone-950: #17140f;
+
+  --color-good: #3e7a49;
+  --color-warning: #b9701c;
+  --color-critical: #b23a2e;
+}
+
+html,
+body,
+#root {
   height: 100%;
 }
 
 body {
   margin: 0;
-  font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+  font-family: var(--font-sans);
+  background-color: var(--color-stone-100);
+  color: var(--color-stone-900);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-color-scheme: dark) {
+  body {
+    background-color: var(--color-stone-950);
+    color: var(--color-stone-50);
+  }
+}
+
+::selection {
+  background-color: var(--color-gold-200);
+  color: var(--color-stone-900);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-accent-500);
+  outline-offset: 2px;
+}
+
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+}
+
+/* Original-language citizen quotes carry a lang attribute already (see WorkCard) -- give
+   Kannada/Devanagari script a real fallback instead of tofu boxes when a system font is
+   missing, without bundling a second webfont family for every citizen's connection. */
+:lang(kn) {
+  font-family: "Noto Sans Kannada", var(--font-sans);
+}
+:lang(hi),
+:lang(mr) {
+  font-family: "Noto Sans Devanagari", var(--font-sans);
+}
+
+/* Leaflet's default z-index stack can bleed over our own sticky header/modals -- scope it. */
+.leaflet-container {
+  font-family: var(--font-sans);
+  z-index: 0;
+  background: var(--color-stone-100);
+}
+
+@media (prefers-color-scheme: dark) {
+  .leaflet-container {
+    background: var(--color-stone-950);
+  }
+}
+
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip {
+  background: var(--color-stone-50);
+  color: var(--color-stone-900);
+}
+@media (prefers-color-scheme: dark) {
+  .leaflet-popup-content-wrapper,
+  .leaflet-popup-tip {
+    background: var(--color-stone-900);
+    color: var(--color-stone-50);
+  }
+}
+
+/* Category chip -- color set per-instance via inline custom properties (src/theme.ts),
+   fixed per category so it never repaints under filtering/sorting. */
+.theme-chip {
+  background: var(--chip-bg);
+  color: var(--chip-fg);
+}
+@media (prefers-color-scheme: dark) {
+  .theme-chip {
+    background: var(--chip-bg-dark);
+    color: var(--chip-fg-dark);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

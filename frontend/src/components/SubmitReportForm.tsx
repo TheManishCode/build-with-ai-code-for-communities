@@ -1,8 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
+import { useNavigate } from 'react-router-dom'
 import { isAxiosError } from 'axios'
+import { AlertTriangle, Camera, CheckCircle2, Keyboard, Mic, MicOff, Search } from 'lucide-react'
+import { motion } from 'motion/react'
 import { api, API_BASE } from '../api/client'
 import type { SubmissionChannel, SubmissionResponse } from '../api/types'
+import { Card } from './ui/Card'
+import { Button } from './ui/Button'
+import { PageHeader } from './ui/PageState'
+import { springy } from '../lib/motion'
 
 const LANGUAGES: { code: string; label: string; speechLang: string }[] = [
   { code: 'en', label: 'English', speechLang: 'en-IN' },
@@ -12,10 +19,10 @@ const LANGUAGES: { code: string; label: string; speechLang: string }[] = [
   { code: 'auto', label: 'Other / not sure', speechLang: 'en-IN' },
 ]
 
-const MODES: { id: SubmissionChannel; label: string; hint: string }[] = [
-  { id: 'text', label: 'Type', hint: 'Write your report in your own words.' },
-  { id: 'voice', label: 'Speak', hint: 'Record your report; it is transcribed to text you can edit.' },
-  { id: 'photo', label: 'Photo', hint: 'Attach a photo of the problem with a short caption.' },
+const MODES: { id: SubmissionChannel; label: string; hint: string; icon: typeof Keyboard }[] = [
+  { id: 'text', label: 'Type', hint: 'Write your report in your own words.', icon: Keyboard },
+  { id: 'voice', label: 'Speak', hint: 'Record your report; it is transcribed to text you can edit.', icon: Mic },
+  { id: 'photo', label: 'Photo', hint: 'Attach a photo of the problem with a short caption.', icon: Camera },
 ]
 
 // Minimal ambient typing for the non-standard (webkit-prefixed) SpeechRecognition API --
@@ -39,7 +46,8 @@ function getSpeechRecognitionCtor(): (new () => SpeechRecognitionLike) | null {
   return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null
 }
 
-export function SubmitReportForm({ onViewStatus }: { onViewStatus: (submissionId: number) => void }) {
+export function SubmitReportForm() {
+  const navigate = useNavigate()
   const [mode, setMode] = useState<SubmissionChannel>('text')
   const [languageCode, setLanguageCode] = useState('en')
   const [rawText, setRawText] = useState('')
@@ -104,7 +112,13 @@ export function SubmitReportForm({ onViewStatus }: { onViewStatus: (submissionId
   }
 
   if (mutation.isSuccess) {
-    return <SubmissionConfirmation result={mutation.data} onSubmitAnother={handleReset} onViewStatus={onViewStatus} />
+    return (
+      <SubmissionConfirmation
+        result={mutation.data}
+        onSubmitAnother={handleReset}
+        onViewStatus={(id) => navigate(`/status/${id}`)}
+      />
+    )
   }
 
   const errorMessage = mutation.isError
@@ -114,46 +128,57 @@ export function SubmitReportForm({ onViewStatus }: { onViewStatus: (submissionId
     : null
 
   return (
-    <div className="mx-auto max-w-lg p-4">
-      <h2 className="mb-1 text-lg font-semibold text-gray-900 dark:text-gray-100">Report a Development Issue</h2>
-      <p className="mb-4 text-sm text-gray-500">
-        Tell us about a water, road, school, health, electricity, or sanitation problem in your village. Every
-        report is read and counted toward the constituency's ranked priorities.
-      </p>
+    <div className="mx-auto max-w-lg px-4">
+      <PageHeader
+        title="Report a Development Issue"
+        subtitle="Tell us about a water, road, school, health, electricity, or sanitation problem in your village. Every report is read and counted toward the constituency's ranked priorities."
+      />
 
       <form onSubmit={handleSubmit}>
-        <fieldset className="mb-4">
-          <legend className="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">How would you like to report?</legend>
-          <div role="radiogroup" aria-label="Report mode" className="flex gap-2">
-            {MODES.map((m) => (
-              <button
-                key={m.id}
-                type="button"
-                role="radio"
-                aria-checked={mode === m.id}
-                onClick={() => setMode(m.id)}
-                className={`flex-1 rounded-md border px-3 py-2 text-sm font-medium ${
-                  mode === m.id
-                    ? 'border-gray-900 bg-gray-900 text-white dark:border-gray-100 dark:bg-gray-100 dark:text-gray-900'
-                    : 'border-gray-300 text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700'
-                }`}
-              >
-                {m.label}
-              </button>
-            ))}
+        <fieldset className="mb-5">
+          <legend className="mb-2 text-sm font-medium text-stone-700 dark:text-stone-300">How would you like to report?</legend>
+          <div role="radiogroup" aria-label="Report mode" className="grid grid-cols-3 gap-2">
+            {MODES.map((m) => {
+              const Icon = m.icon
+              const active = mode === m.id
+              return (
+                <button
+                  key={m.id}
+                  type="button"
+                  role="radio"
+                  aria-checked={active}
+                  onClick={() => setMode(m.id)}
+                  className={`relative flex flex-col items-center gap-1.5 rounded-md border px-3 py-2.5 text-sm font-medium transition-colors ${
+                    active
+                      ? 'border-accent-600 text-accent-800 dark:border-accent-400 dark:text-accent-200'
+                      : 'border-stone-300 text-stone-600 hover:bg-stone-50 dark:border-stone-700 dark:text-stone-300 dark:hover:bg-stone-800'
+                  }`}
+                >
+                  {active && (
+                    <motion.span
+                      layoutId="mode-active-bg"
+                      className="absolute inset-0 -z-10 rounded-md bg-accent-50 dark:bg-accent-900/30"
+                      transition={springy}
+                    />
+                  )}
+                  <Icon size={17} aria-hidden="true" />
+                  {m.label}
+                </button>
+              )
+            })}
           </div>
-          <p className="mt-1 text-xs text-gray-500">{MODES.find((m) => m.id === mode)?.hint}</p>
+          <p className="mt-1.5 text-xs text-stone-500 dark:text-stone-400">{MODES.find((m) => m.id === mode)?.hint}</p>
         </fieldset>
 
-        <div className="mb-4">
-          <label htmlFor="report-language" className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+        <div className="mb-5">
+          <label htmlFor="report-language" className="mb-1 block text-sm font-medium text-stone-700 dark:text-stone-300">
             Language
           </label>
           <select
             id="report-language"
             value={languageCode}
             onChange={(e) => setLanguageCode(e.target.value)}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+            className="w-full rounded-md border border-stone-300 bg-stone-50 px-3 py-2 text-sm dark:border-stone-700 dark:bg-stone-900 dark:text-stone-100"
           >
             {LANGUAGES.map((l) => (
               <option key={l.code} value={l.code}>
@@ -164,8 +189,8 @@ export function SubmitReportForm({ onViewStatus }: { onViewStatus: (submissionId
         </div>
 
         {mode === 'photo' && (
-          <div className="mb-4">
-            <label htmlFor="report-photo" className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+          <div className="mb-5">
+            <label htmlFor="report-photo" className="mb-1 block text-sm font-medium text-stone-700 dark:text-stone-300">
               Photo
             </label>
             <input
@@ -173,7 +198,7 @@ export function SubmitReportForm({ onViewStatus }: { onViewStatus: (submissionId
               type="file"
               accept="image/jpeg,image/png,image/webp"
               onChange={(e) => handlePhotoChange(e.target.files?.[0] ?? null)}
-              className="block w-full text-sm text-gray-700 dark:text-gray-300"
+              className="block w-full text-sm text-stone-700 dark:text-stone-300"
             />
             {photoPreviewUrl && (
               <img src={photoPreviewUrl} alt="Selected photo preview" className="mt-2 h-32 w-32 rounded-md object-cover" />
@@ -181,9 +206,9 @@ export function SubmitReportForm({ onViewStatus }: { onViewStatus: (submissionId
           </div>
         )}
 
-        <div className="mb-4">
+        <div className="mb-5">
           <div className="mb-1 flex items-center justify-between">
-            <label htmlFor="report-text" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label htmlFor="report-text" className="text-sm font-medium text-stone-700 dark:text-stone-300">
               {mode === 'photo' ? 'Caption -- describe the problem' : 'Describe the problem'}
             </label>
             {mode === 'voice' && speechSupported && (
@@ -191,18 +216,20 @@ export function SubmitReportForm({ onViewStatus }: { onViewStatus: (submissionId
                 type="button"
                 onClick={handleToggleListening}
                 aria-pressed={isListening}
-                className={`rounded-md px-2.5 py-1 text-xs font-medium ${
+                className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ${
                   isListening
-                    ? 'bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300'
-                    : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-100'
+                    ? 'bg-critical/10 text-critical'
+                    : 'bg-stone-100 text-stone-800 dark:bg-stone-800 dark:text-stone-100'
                 }`}
               >
-                {isListening ? '● Listening... tap to stop' : '🎤 Tap to speak'}
+                {isListening ? <MicOff size={13} aria-hidden="true" /> : <Mic size={13} aria-hidden="true" />}
+                {isListening ? 'Listening... tap to stop' : 'Tap to speak'}
               </button>
             )}
           </div>
           {mode === 'voice' && !speechSupported && (
-            <p className="mb-1 text-xs text-amber-600 dark:text-amber-400">
+            <p className="mb-1 flex items-center gap-1 text-xs text-warning">
+              <AlertTriangle size={13} aria-hidden="true" />
               Voice input isn't supported in this browser -- please type your report below instead.
             </p>
           )}
@@ -213,24 +240,21 @@ export function SubmitReportForm({ onViewStatus }: { onViewStatus: (submissionId
             rows={5}
             maxLength={2000}
             placeholder="e.g. There has been no drinking water in our village for 3 days, the borewell motor is not working."
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+            className="w-full rounded-md border border-stone-300 bg-stone-50 px-3 py-2 text-sm dark:border-stone-700 dark:bg-stone-900 dark:text-stone-100"
           />
-          <p className="mt-1 text-right text-xs text-gray-400">{rawText.length}/2000</p>
+          <p className="mt-1 text-right text-xs tabular-nums text-stone-400">{rawText.length}/2000</p>
         </div>
 
         {errorMessage && (
-          <div className="mb-4 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-300">
+          <div className="mb-5 flex items-start gap-2 rounded-md border border-critical/20 bg-critical/5 p-3 text-sm text-critical dark:bg-critical/10">
+            <AlertTriangle size={15} className="mt-0.5 shrink-0" aria-hidden="true" />
             {errorMessage}
           </div>
         )}
 
-        <button
-          type="submit"
-          disabled={mutation.isPending || rawText.trim().length === 0}
-          className="w-full rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-gray-100 dark:text-gray-900"
-        >
+        <Button type="submit" disabled={mutation.isPending || rawText.trim().length === 0} className="w-full">
           {mutation.isPending ? 'Submitting...' : 'Submit Report'}
-        </button>
+        </Button>
       </form>
     </div>
   )
@@ -246,15 +270,23 @@ function SubmissionConfirmation({
   onViewStatus: (submissionId: number) => void
 }) {
   return (
-    <div className="mx-auto max-w-lg p-4">
-      <div className="rounded-lg border border-green-200 bg-green-50 p-5 dark:border-green-900 dark:bg-green-950">
-        <h2 className="mb-1 text-lg font-semibold text-green-900 dark:text-green-200">Report received</h2>
-        <p className="text-sm text-green-800 dark:text-green-300">
+    <motion.div
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={springy}
+      className="mx-auto max-w-lg px-4"
+    >
+      <Card className="border-good/25 bg-good/5 p-5 dark:bg-good/10">
+        <div className="mb-1 flex items-center gap-2">
+          <CheckCircle2 size={18} className="text-good" aria-hidden="true" />
+          <h2 className="font-display text-lg font-medium text-stone-900 dark:text-stone-50">Report received</h2>
+        </div>
+        <p className="text-sm text-stone-700 dark:text-stone-300">
           Thank you -- your report has been recorded and will be weighed alongside other citizen reports and
           infrastructure data when priorities are ranked.
         </p>
 
-        <div className="mt-4 grid grid-cols-2 gap-3 border-t border-green-200 pt-4 text-sm dark:border-green-800">
+        <div className="mt-4 grid grid-cols-2 gap-3 border-t border-good/20 pt-4 text-sm">
           <Field label="Submission ID" value={`#${result.submission_id}`} />
           <Field label="Category" value={result.theme} />
           <Field label="Village" value={result.village_name ?? 'Not automatically identified'} />
@@ -270,40 +302,34 @@ function SubmissionConfirmation({
         )}
 
         {!result.village_name && (
-          <p className="mt-3 text-xs text-amber-700 dark:text-amber-400">
+          <p className="mt-3 flex items-start gap-1.5 text-xs text-warning">
+            <AlertTriangle size={13} className="mt-0.5 shrink-0" aria-hidden="true" />
             We couldn't automatically identify the village from your text. Your report is still recorded -- an
             office reviewer can add it later.
           </p>
         )}
 
-        <p className="mt-4 text-xs text-green-700 dark:text-green-400">
-          Save your submission ID to check its status later.
-        </p>
-      </div>
+        <p className="mt-4 text-xs text-stone-500 dark:text-stone-400">Save your submission ID to check its status later.</p>
+      </Card>
 
       <div className="mt-4 flex gap-2">
-        <button
-          onClick={() => onViewStatus(result.submission_id)}
-          className="flex-1 rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700 dark:bg-gray-100 dark:text-gray-900"
-        >
+        <Button className="flex flex-1 items-center justify-center gap-1.5" onClick={() => onViewStatus(result.submission_id)}>
+          <Search size={14} aria-hidden="true" />
           Check my report status
-        </button>
-        <button
-          onClick={onSubmitAnother}
-          className="flex-1 rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
-        >
+        </Button>
+        <Button variant="secondary" className="flex-1" onClick={onSubmitAnother}>
           Submit another report
-        </button>
+        </Button>
       </div>
-    </div>
+    </motion.div>
   )
 }
 
 function Field({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <div className="text-xs text-gray-400">{label}</div>
-      <div className="font-medium text-gray-900 dark:text-gray-100">{value}</div>
+      <div className="text-xs text-stone-400">{label}</div>
+      <div className="font-medium text-stone-900 dark:text-stone-100">{value}</div>
     </div>
   )
 }

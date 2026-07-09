@@ -1,3 +1,4 @@
+import tempfile
 from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -25,6 +26,13 @@ class Settings(BaseSettings):
     # Comma-separated list, e.g. "http://localhost:5173,https://peoples-priorities.example.org"
     # -- configurable so a real deployment doesn't need a code change to add its own origin.
     cors_origins: str = "http://localhost:5173"
+
+    # Where citizen-submitted photos (POST /submissions) are stored. Defaults to the OS temp
+    # dir rather than inside the app source tree -- many deploy platforms ship app source
+    # read-only, and the temp dir is reliably writable (though ephemeral/non-persistent
+    # across redeploys -- see README's Known limitations). Override via env for a real
+    # persistent-disk or object-storage mount.
+    upload_dir: Path = Path(tempfile.gettempdir()) / "peoples_priorities_uploads"
 
     @property
     def cors_origin_list(self) -> list[str]:
