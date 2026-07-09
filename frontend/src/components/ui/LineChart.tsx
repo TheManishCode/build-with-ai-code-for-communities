@@ -1,4 +1,5 @@
 import { useId, useState } from 'react'
+import { motion, useReducedMotion } from 'motion/react'
 
 export interface LineSeries {
   name: string
@@ -20,6 +21,7 @@ export function LineChart({
 }) {
   const clipId = useId()
   const [hoverIdx, setHoverIdx] = useState<number | null>(null)
+  const reduceMotion = useReducedMotion()
 
   const width = 560
   const height = 240
@@ -58,9 +60,9 @@ export function LineChart({
               y2={yAt(v)}
               stroke="currentColor"
               strokeWidth={1}
-              className="text-neutral-200 dark:text-neutral-800"
+              className="text-stone-200 dark:text-stone-800"
             />
-            <text x={padding.left - 8} y={yAt(v)} textAnchor="end" dominantBaseline="middle" className="fill-neutral-400 text-[9px]">
+            <text x={padding.left - 8} y={yAt(v)} textAnchor="end" dominantBaseline="middle" className="fill-stone-400 text-[9px]">
               {yFormatter(v)}
             </text>
           </g>
@@ -68,7 +70,7 @@ export function LineChart({
 
         {/* x-axis labels */}
         {xLabels.map((label, i) => (
-          <text key={i} x={xAt(i)} y={height - 8} textAnchor="middle" className="fill-neutral-400 text-[9px]">
+          <text key={i} x={xAt(i)} y={height - 8} textAnchor="middle" className="fill-stone-400 text-[9px]">
             {label}
           </text>
         ))}
@@ -82,15 +84,29 @@ export function LineChart({
             y2={padding.top + plotH}
             stroke="currentColor"
             strokeWidth={1}
-            className="text-neutral-300 dark:text-neutral-700"
+            className="text-stone-300 dark:text-stone-700"
           />
         )}
 
-        {/* series lines */}
+        {/* series lines -- drawn in with a stroke-dashoffset reveal on mount */}
         <g clipPath={`url(#${clipId})`}>
-          {series.map((s) => (
-            <path key={s.name} d={pathFor(s.values)} fill="none" stroke={s.color} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
-          ))}
+          {series.map((s) => {
+            const d = pathFor(s.values)
+            return (
+              <motion.path
+                key={s.name}
+                d={d}
+                fill="none"
+                stroke={s.color}
+                strokeWidth={2}
+                strokeLinejoin="round"
+                strokeLinecap="round"
+                initial={reduceMotion ? undefined : { pathLength: 0 }}
+                animate={reduceMotion ? undefined : { pathLength: 1 }}
+                transition={{ duration: 0.7, ease: 'easeOut' }}
+              />
+            )
+          })}
         </g>
 
         {/* markers + end labels */}
@@ -103,14 +119,13 @@ export function LineChart({
                 <circle
                   cx={xAt(i)}
                   cy={yAt(v)}
-                  r={isHover ? 5 : 4}
+                  r={isHover || isEnd ? 5 : 3.5}
                   fill={s.color}
-                  stroke="var(--surface-ring, white)"
                   strokeWidth={2}
-                  className="stroke-white dark:stroke-neutral-900"
+                  className="stroke-stone-50 dark:stroke-stone-900"
                 />
                 {isEnd && (
-                  <text x={xAt(i) + 6} y={yAt(v)} dominantBaseline="middle" className="fill-neutral-600 text-[10px] font-medium dark:fill-neutral-300">
+                  <text x={xAt(i) + 7} y={yAt(v)} dominantBaseline="middle" className="fill-stone-700 text-[10px] font-semibold dark:fill-stone-200">
                     {yFormatter(v)}
                   </text>
                 )}
@@ -142,7 +157,7 @@ export function LineChart({
       {/* legend -- required for >= 2 series */}
       <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
         {series.map((s) => (
-          <span key={s.name} className="flex items-center gap-1.5 text-xs text-neutral-600 dark:text-neutral-400">
+          <span key={s.name} className="flex items-center gap-1.5 text-xs text-stone-600 dark:text-stone-400">
             <span className="h-0.5 w-3 rounded-full" style={{ backgroundColor: s.color }} />
             {s.name}
           </span>
@@ -151,16 +166,16 @@ export function LineChart({
 
       {/* tooltip -- readout of every series at the hovered x, reachable by keyboard focus too */}
       {hoverIdx !== null && (
-        <div className="mt-2 rounded-md border border-neutral-200 bg-neutral-50 px-3 py-2 text-xs dark:border-neutral-800 dark:bg-neutral-800">
-          <div className="mb-1 font-medium text-neutral-700 dark:text-neutral-200">{xLabels[hoverIdx]}</div>
+        <div className="mt-2 rounded-md border border-stone-200 bg-stone-50 px-3 py-2 text-xs dark:border-stone-800 dark:bg-stone-800">
+          <div className="mb-1 font-medium text-stone-700 dark:text-stone-200">{xLabels[hoverIdx]}</div>
           <div className="flex flex-col gap-0.5">
             {series.map((s) => (
               <div key={s.name} className="flex items-center justify-between gap-4">
-                <span className="flex items-center gap-1.5 text-neutral-500 dark:text-neutral-400">
+                <span className="flex items-center gap-1.5 text-stone-500 dark:text-stone-400">
                   <span className="h-0.5 w-3 rounded-full" style={{ backgroundColor: s.color }} />
                   {s.name}
                 </span>
-                <span className="font-medium tabular-nums text-neutral-900 dark:text-neutral-50">{yFormatter(s.values[hoverIdx])}</span>
+                <span className="font-medium tabular-nums text-stone-900 dark:text-stone-50">{yFormatter(s.values[hoverIdx])}</span>
               </div>
             ))}
           </div>

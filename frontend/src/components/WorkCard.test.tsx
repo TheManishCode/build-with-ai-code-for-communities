@@ -64,4 +64,9 @@ describe('WorkCard', () => {
     fireEvent.click(screen.getByRole('button', { name: /in their words/i }))
     expect(screen.getByText(/No drinking water for 3 days/)).toBeInTheDocument()
   })
+
+  it('renders a zero-padded rank numeral when a rank is given', () => {
+    render(<WorkCard work={makeWork()} rank={3} onDraftLetter={vi.fn()} />)
+    expect(screen.getByText('03')).toBeInTheDocument()
+  })
 })

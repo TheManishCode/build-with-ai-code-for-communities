@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import type { ReactElement } from 'react'
+import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { SubmitReportForm } from './SubmitReportForm'
 import { api } from '../api/client'
 import type { SubmissionResponse } from '../api/types'
@@ -14,9 +14,18 @@ vi.mock('../api/client', async () => {
   }
 })
 
-function renderWithClient(ui: ReactElement) {
+function renderWithProviders() {
   const queryClient = new QueryClient({ defaultOptions: { mutations: { retry: false } } })
-  return render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>)
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter initialEntries={['/report']}>
+        <Routes>
+          <Route path="/report" element={<SubmitReportForm />} />
+          <Route path="/status/:submissionId" element={<div data-testid="status-page" />} />
+        </Routes>
+      </MemoryRouter>
+    </QueryClientProvider>,
+  )
 }
 
 const mockResponse: SubmissionResponse = {
@@ -39,7 +48,7 @@ describe('SubmitReportForm', () => {
   })
 
   it('disables submit until report text is entered', () => {
-    renderWithClient(<SubmitReportForm onViewStatus={vi.fn()} />)
+    renderWithProviders()
     expect(screen.getByRole('button', { name: /submit report/i })).toBeDisabled()
     fireEvent.change(screen.getByLabelText(/describe the problem/i), { target: { value: 'No water for 3 days.' } })
     expect(screen.getByRole('button', { name: /submit report/i })).not.toBeDisabled()
@@ -47,7 +56,7 @@ describe('SubmitReportForm', () => {
 
   it('submits the typed report with the selected language and shows a confirmation', async () => {
     vi.mocked(api.submitReport).mockResolvedValue(mockResponse)
-    renderWithClient(<SubmitReportForm onViewStatus={vi.fn()} />)
+    renderWithProviders()
 
     fireEvent.change(screen.getByLabelText(/describe the problem/i), { target: { value: 'No water for 3 days.' } })
     fireEvent.click(screen.getByRole('button', { name: /submit report/i }))
@@ -63,17 +72,16 @@ describe('SubmitReportForm', () => {
     expect(screen.getByText('Kaladgi')).toBeInTheDocument()
   })
 
-  it('calls onViewStatus with the new submission id when "Check my report status" is clicked', async () => {
+  it('navigates to the status page for the new submission when "Check my report status" is clicked', async () => {
     vi.mocked(api.submitReport).mockResolvedValue(mockResponse)
-    const onViewStatus = vi.fn()
-    renderWithClient(<SubmitReportForm onViewStatus={onViewStatus} />)
+    renderWithProviders()
 
     fireEvent.change(screen.getByLabelText(/describe the problem/i), { target: { value: 'No water for 3 days.' } })
     fireEvent.click(screen.getByRole('button', { name: /submit report/i }))
     await waitFor(() => expect(screen.getByText('Report received')).toBeInTheDocument())
 
     fireEvent.click(screen.getByRole('button', { name: /check my report status/i }))
-    expect(onViewStatus).toHaveBeenCalledWith(101)
+    expect(screen.getByTestId('status-page')).toBeInTheDocument()
   })
 
   it('shows the server-provided error message on failure', async () => {
@@ -81,7 +89,7 @@ describe('SubmitReportForm', () => {
       isAxiosError: true,
       response: { data: { detail: 'raw_text must be at most 2000 characters' } },
     })
-    renderWithClient(<SubmitReportForm onViewStatus={vi.fn()} />)
+    renderWithProviders()
 
     fireEvent.change(screen.getByLabelText(/describe the problem/i), { target: { value: 'x'.repeat(50) } })
     fireEvent.click(screen.getByRole('button', { name: /submit report/i }))
@@ -90,7 +98,7 @@ describe('SubmitReportForm', () => {
   })
 
   it('switches to photo mode and shows a caption label', () => {
-    renderWithClient(<SubmitReportForm onViewStatus={vi.fn()} />)
+    renderWithProviders()
     fireEvent.click(screen.getByRole('radio', { name: 'Photo' }))
     expect(screen.getByLabelText(/caption/i)).toBeInTheDocument()
   })

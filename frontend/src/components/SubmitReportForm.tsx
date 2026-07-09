@@ -1,12 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
+import { useNavigate } from 'react-router-dom'
 import { isAxiosError } from 'axios'
 import { AlertTriangle, Camera, CheckCircle2, Keyboard, Mic, MicOff, Search } from 'lucide-react'
+import { motion } from 'motion/react'
 import { api, API_BASE } from '../api/client'
 import type { SubmissionChannel, SubmissionResponse } from '../api/types'
 import { Card } from './ui/Card'
 import { Button } from './ui/Button'
 import { PageHeader } from './ui/PageState'
+import { springy } from '../lib/motion'
 
 const LANGUAGES: { code: string; label: string; speechLang: string }[] = [
   { code: 'en', label: 'English', speechLang: 'en-IN' },
@@ -43,7 +46,8 @@ function getSpeechRecognitionCtor(): (new () => SpeechRecognitionLike) | null {
   return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null
 }
 
-export function SubmitReportForm({ onViewStatus }: { onViewStatus: (submissionId: number) => void }) {
+export function SubmitReportForm() {
+  const navigate = useNavigate()
   const [mode, setMode] = useState<SubmissionChannel>('text')
   const [languageCode, setLanguageCode] = useState('en')
   const [rawText, setRawText] = useState('')
@@ -108,7 +112,13 @@ export function SubmitReportForm({ onViewStatus }: { onViewStatus: (submissionId
   }
 
   if (mutation.isSuccess) {
-    return <SubmissionConfirmation result={mutation.data} onSubmitAnother={handleReset} onViewStatus={onViewStatus} />
+    return (
+      <SubmissionConfirmation
+        result={mutation.data}
+        onSubmitAnother={handleReset}
+        onViewStatus={(id) => navigate(`/status/${id}`)}
+      />
+    )
   }
 
   const errorMessage = mutation.isError
@@ -118,15 +128,15 @@ export function SubmitReportForm({ onViewStatus }: { onViewStatus: (submissionId
     : null
 
   return (
-    <div className="mx-auto max-w-lg p-4">
+    <div className="mx-auto max-w-lg px-4">
       <PageHeader
         title="Report a Development Issue"
         subtitle="Tell us about a water, road, school, health, electricity, or sanitation problem in your village. Every report is read and counted toward the constituency's ranked priorities."
       />
 
       <form onSubmit={handleSubmit}>
-        <fieldset className="mb-4">
-          <legend className="mb-2 text-sm font-medium text-neutral-700 dark:text-neutral-300">How would you like to report?</legend>
+        <fieldset className="mb-5">
+          <legend className="mb-2 text-sm font-medium text-stone-700 dark:text-stone-300">How would you like to report?</legend>
           <div role="radiogroup" aria-label="Report mode" className="grid grid-cols-3 gap-2">
             {MODES.map((m) => {
               const Icon = m.icon
@@ -138,30 +148,37 @@ export function SubmitReportForm({ onViewStatus }: { onViewStatus: (submissionId
                   role="radio"
                   aria-checked={active}
                   onClick={() => setMode(m.id)}
-                  className={`flex flex-col items-center gap-1.5 rounded-lg border px-3 py-2.5 text-sm font-medium transition-colors ${
+                  className={`relative flex flex-col items-center gap-1.5 rounded-md border px-3 py-2.5 text-sm font-medium transition-colors ${
                     active
-                      ? 'border-brand-500 bg-brand-50 text-brand-700 dark:border-brand-400 dark:bg-brand-900/30 dark:text-brand-200'
-                      : 'border-neutral-300 text-neutral-700 hover:bg-neutral-50 dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-800'
+                      ? 'border-accent-600 text-accent-800 dark:border-accent-400 dark:text-accent-200'
+                      : 'border-stone-300 text-stone-600 hover:bg-stone-50 dark:border-stone-700 dark:text-stone-300 dark:hover:bg-stone-800'
                   }`}
                 >
+                  {active && (
+                    <motion.span
+                      layoutId="mode-active-bg"
+                      className="absolute inset-0 -z-10 rounded-md bg-accent-50 dark:bg-accent-900/30"
+                      transition={springy}
+                    />
+                  )}
                   <Icon size={17} aria-hidden="true" />
                   {m.label}
                 </button>
               )
             })}
           </div>
-          <p className="mt-1.5 text-xs text-neutral-500 dark:text-neutral-400">{MODES.find((m) => m.id === mode)?.hint}</p>
+          <p className="mt-1.5 text-xs text-stone-500 dark:text-stone-400">{MODES.find((m) => m.id === mode)?.hint}</p>
         </fieldset>
 
-        <div className="mb-4">
-          <label htmlFor="report-language" className="mb-1 block text-sm font-medium text-neutral-700 dark:text-neutral-300">
+        <div className="mb-5">
+          <label htmlFor="report-language" className="mb-1 block text-sm font-medium text-stone-700 dark:text-stone-300">
             Language
           </label>
           <select
             id="report-language"
             value={languageCode}
             onChange={(e) => setLanguageCode(e.target.value)}
-            className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100"
+            className="w-full rounded-md border border-stone-300 bg-stone-50 px-3 py-2 text-sm dark:border-stone-700 dark:bg-stone-900 dark:text-stone-100"
           >
             {LANGUAGES.map((l) => (
               <option key={l.code} value={l.code}>
@@ -172,8 +189,8 @@ export function SubmitReportForm({ onViewStatus }: { onViewStatus: (submissionId
         </div>
 
         {mode === 'photo' && (
-          <div className="mb-4">
-            <label htmlFor="report-photo" className="mb-1 block text-sm font-medium text-neutral-700 dark:text-neutral-300">
+          <div className="mb-5">
+            <label htmlFor="report-photo" className="mb-1 block text-sm font-medium text-stone-700 dark:text-stone-300">
               Photo
             </label>
             <input
@@ -181,17 +198,17 @@ export function SubmitReportForm({ onViewStatus }: { onViewStatus: (submissionId
               type="file"
               accept="image/jpeg,image/png,image/webp"
               onChange={(e) => handlePhotoChange(e.target.files?.[0] ?? null)}
-              className="block w-full text-sm text-neutral-700 dark:text-neutral-300"
+              className="block w-full text-sm text-stone-700 dark:text-stone-300"
             />
             {photoPreviewUrl && (
-              <img src={photoPreviewUrl} alt="Selected photo preview" className="mt-2 h-32 w-32 rounded-lg object-cover" />
+              <img src={photoPreviewUrl} alt="Selected photo preview" className="mt-2 h-32 w-32 rounded-md object-cover" />
             )}
           </div>
         )}
 
-        <div className="mb-4">
+        <div className="mb-5">
           <div className="mb-1 flex items-center justify-between">
-            <label htmlFor="report-text" className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+            <label htmlFor="report-text" className="text-sm font-medium text-stone-700 dark:text-stone-300">
               {mode === 'photo' ? 'Caption -- describe the problem' : 'Describe the problem'}
             </label>
             {mode === 'voice' && speechSupported && (
@@ -202,7 +219,7 @@ export function SubmitReportForm({ onViewStatus }: { onViewStatus: (submissionId
                 className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ${
                   isListening
                     ? 'bg-critical/10 text-critical'
-                    : 'bg-neutral-100 text-neutral-800 dark:bg-neutral-800 dark:text-neutral-100'
+                    : 'bg-stone-100 text-stone-800 dark:bg-stone-800 dark:text-stone-100'
                 }`}
               >
                 {isListening ? <MicOff size={13} aria-hidden="true" /> : <Mic size={13} aria-hidden="true" />}
@@ -223,13 +240,13 @@ export function SubmitReportForm({ onViewStatus }: { onViewStatus: (submissionId
             rows={5}
             maxLength={2000}
             placeholder="e.g. There has been no drinking water in our village for 3 days, the borewell motor is not working."
-            className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100"
+            className="w-full rounded-md border border-stone-300 bg-stone-50 px-3 py-2 text-sm dark:border-stone-700 dark:bg-stone-900 dark:text-stone-100"
           />
-          <p className="mt-1 text-right text-xs text-neutral-400">{rawText.length}/2000</p>
+          <p className="mt-1 text-right text-xs tabular-nums text-stone-400">{rawText.length}/2000</p>
         </div>
 
         {errorMessage && (
-          <div className="mb-4 flex items-start gap-2 rounded-lg border border-critical/20 bg-critical/5 p-3 text-sm text-critical dark:bg-critical/10">
+          <div className="mb-5 flex items-start gap-2 rounded-md border border-critical/20 bg-critical/5 p-3 text-sm text-critical dark:bg-critical/10">
             <AlertTriangle size={15} className="mt-0.5 shrink-0" aria-hidden="true" />
             {errorMessage}
           </div>
@@ -253,13 +270,18 @@ function SubmissionConfirmation({
   onViewStatus: (submissionId: number) => void
 }) {
   return (
-    <div className="mx-auto max-w-lg p-4">
-      <Card className="border-good/20 bg-good/5 p-5 dark:bg-good/10">
+    <motion.div
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={springy}
+      className="mx-auto max-w-lg px-4"
+    >
+      <Card className="border-good/25 bg-good/5 p-5 dark:bg-good/10">
         <div className="mb-1 flex items-center gap-2">
           <CheckCircle2 size={18} className="text-good" aria-hidden="true" />
-          <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-50">Report received</h2>
+          <h2 className="font-display text-lg font-medium text-stone-900 dark:text-stone-50">Report received</h2>
         </div>
-        <p className="text-sm text-neutral-700 dark:text-neutral-300">
+        <p className="text-sm text-stone-700 dark:text-stone-300">
           Thank you -- your report has been recorded and will be weighed alongside other citizen reports and
           infrastructure data when priorities are ranked.
         </p>
@@ -275,19 +297,19 @@ function SubmissionConfirmation({
           <img
             src={`${API_BASE}${result.photo_url}`}
             alt="Attached photo evidence"
-            className="mt-4 h-32 w-32 rounded-lg object-cover"
+            className="mt-4 h-32 w-32 rounded-md object-cover"
           />
         )}
 
         {!result.village_name && (
-          <p className="mt-3 flex items-start gap-1.5 text-xs text-amber-700 dark:text-amber-400">
+          <p className="mt-3 flex items-start gap-1.5 text-xs text-warning">
             <AlertTriangle size={13} className="mt-0.5 shrink-0" aria-hidden="true" />
             We couldn't automatically identify the village from your text. Your report is still recorded -- an
             office reviewer can add it later.
           </p>
         )}
 
-        <p className="mt-4 text-xs text-neutral-500 dark:text-neutral-400">Save your submission ID to check its status later.</p>
+        <p className="mt-4 text-xs text-stone-500 dark:text-stone-400">Save your submission ID to check its status later.</p>
       </Card>
 
       <div className="mt-4 flex gap-2">
@@ -299,15 +321,15 @@ function SubmissionConfirmation({
           Submit another report
         </Button>
       </div>
-    </div>
+    </motion.div>
   )
 }
 
 function Field({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <div className="text-xs text-neutral-400">{label}</div>
-      <div className="font-medium text-neutral-900 dark:text-neutral-100">{value}</div>
+      <div className="text-xs text-stone-400">{label}</div>
+      <div className="font-medium text-stone-900 dark:text-stone-100">{value}</div>
     </div>
   )
 }

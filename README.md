@@ -51,12 +51,13 @@ source code/
       api/                  FastAPI routers, one per resource
     alembic/                Schema migrations
     tests/                  64 tests against the live database (see Testing, below)
-  frontend/                 React + Vite + TanStack Query + Tailwind + Leaflet
+  frontend/                 React + Vite + TanStack Query + React Router + Tailwind + Leaflet + motion
     src/theme.ts             Design tokens (validated categorical/status palette, chart
                              chrome) -- single source of truth for raw-hex consumers
                              (SVG charts, the Leaflet map)
     src/components/ui/       Shared primitives (Card, Badge, Button, StatTile, Meter,
                              InfoTooltip, BarChart, LineChart) every page is built from
+    src/components/layout/   AppShell -- masthead, section nav, route transition
 ```
 
 Citizen submissions are deduplicated into **issues** (same village + theme), scored on
@@ -66,6 +67,33 @@ infrastructure shortfall vs. the constituency, from Census/amenities data) — t
 combined into a composite score. Villages with a high gap but no citizen reports still
 surface as "silent need" candidates. A knapsack allocator selects the highest-value
 combination of works that fits the MP's real MPLADS budget.
+
+### Frontend design system
+
+The UI is a "civic register" rather than a generic admin dashboard: a public, auditable
+ledger of development priorities for a specific constituency, not a SaaS product. That's
+reflected directly in the palette and type choices rather than a default Tailwind
+grey/blue theme:
+
+- **Palette** (`src/index.css`, `src/theme.ts`) -- basalt ink and quarry-stone paper as
+  neutrals, a register-indigo accent for interactive chrome, and a sandstone-gold
+  secondary accent reserved for numerals, rules, and the seal mark (never used for
+  anything clickable, so it can't be mistaken for an affordance). The good/warning/critical
+  semantic trio is a deliberately separate hue family from both accents. The seven category
+  colors (water/sanitation/electricity/school/road/health/other) are fixed, not derived
+  from array order, so a filtered or re-sorted list never repaints a theme's color.
+- **Type** -- Fraunces (display, used sparingly for page titles and score numerals) paired
+  with Public Sans (body/UI), self-hosted via `@fontsource` rather than a CDN link. Quote
+  blocks carrying a citizen's original-language text get a `:lang()`-scoped fallback stack
+  for Kannada/Devanagari script.
+- **Motion** (`src/lib/motion.ts`, the `motion` package) -- used deliberately, not
+  decoratively: a shared route-transition rise-and-settle, a list stagger for ranked
+  results, a spring-animated meter/bar fill, and a `layoutId` shared-element indicator on
+  the report-mode selector. Respects `prefers-reduced-motion` throughout.
+- **Routing** -- real per-section URLs (`/report`, `/works`, `/map`, `/status/:id`, ...) via
+  React Router, so a citizen's status page is a shareable link rather than client-only tab
+  state. Every section except the default report form is route-split (`React.lazy`), since
+  the map alone pulls in Leaflet and most first-time visitors only need the report form.
 
 ## Setup
 

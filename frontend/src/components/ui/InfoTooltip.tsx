@@ -11,7 +11,7 @@ export function InfoTooltip({ label, children }: { label: string; children: Reac
       <button
         type="button"
         aria-describedby={id}
-        className="inline-flex rounded-full text-neutral-400 hover:text-neutral-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 dark:text-neutral-500 dark:hover:text-neutral-300"
+        className="inline-flex rounded-full text-stone-400 hover:text-accent-600 dark:text-stone-500 dark:hover:text-accent-300"
       >
         <span className="sr-only">{label}</span>
         <Info size={14} aria-hidden="true" />
@@ -19,7 +19,7 @@ export function InfoTooltip({ label, children }: { label: string; children: Reac
       <span
         role="tooltip"
         id={id}
-        className="pointer-events-none absolute bottom-full left-1/2 z-20 mb-2 w-56 -translate-x-1/2 rounded-md bg-neutral-900 px-3 py-2 text-xs leading-relaxed text-neutral-50 opacity-0 shadow-lg transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 dark:bg-neutral-100 dark:text-neutral-900"
+        className="pointer-events-none absolute bottom-full left-1/2 z-20 mb-2 w-56 -translate-x-1/2 origin-bottom scale-95 rounded-md bg-stone-900 px-3 py-2 text-xs leading-relaxed text-stone-50 opacity-0 shadow-lg transition-[opacity,transform] duration-150 group-hover:scale-100 group-hover:opacity-100 group-focus-within:scale-100 group-focus-within:opacity-100 dark:bg-stone-100 dark:text-stone-900"
       >
         {children}
       </span>

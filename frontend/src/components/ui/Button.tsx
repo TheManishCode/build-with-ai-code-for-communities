@@ -1,23 +1,35 @@
 import type { ButtonHTMLAttributes } from 'react'
+import { motion, useReducedMotion } from 'motion/react'
 
 type Variant = 'primary' | 'secondary' | 'ghost'
 
 const VARIANT_CLASSES: Record<Variant, string> = {
-  primary: 'bg-brand-500 text-white hover:bg-brand-600 disabled:bg-brand-300',
+  primary: 'bg-accent-700 text-stone-50 hover:bg-accent-800 disabled:bg-accent-300 dark:bg-accent-600 dark:hover:bg-accent-500',
   secondary:
-    'border border-neutral-300 text-neutral-800 hover:bg-neutral-50 dark:border-neutral-700 dark:text-neutral-100 dark:hover:bg-neutral-800',
-  ghost: 'text-neutral-600 hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800',
+    'border border-stone-300 text-stone-800 hover:border-stone-400 hover:bg-stone-50 dark:border-stone-700 dark:text-stone-100 dark:hover:bg-stone-800',
+  ghost: 'text-stone-600 hover:bg-stone-100 dark:text-stone-300 dark:hover:bg-stone-800',
 }
+
+// motion.button redefines a handful of DOM event handlers (onDrag and friends) with its own
+// gesture-event signatures, which collide with the native HTMLButtonElement typings when
+// spread -- omit them since this component never uses drag/animation callbacks itself.
+type NativeButtonProps = Omit<
+  ButtonHTMLAttributes<HTMLButtonElement>,
+  'onDrag' | 'onDragStart' | 'onDragEnd' | 'onAnimationStart' | 'onAnimationEnd' | 'onAnimationIteration'
+>
 
 export function Button({
   variant = 'primary',
   className = '',
   ...props
-}: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant }) {
+}: NativeButtonProps & { variant?: Variant }) {
+  const reduceMotion = useReducedMotion()
   return (
-    <button
+    <motion.button
       {...props}
-      className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 disabled:cursor-not-allowed disabled:opacity-60 ${VARIANT_CLASSES[variant]} ${className}`}
+      whileTap={props.disabled ? undefined : { scale: reduceMotion ? 1 : 0.97 }}
+      transition={{ duration: 0.12 }}
+      className={`rounded-md px-4 py-2 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${VARIANT_CLASSES[variant]} ${className}`}
     />
   )
 }

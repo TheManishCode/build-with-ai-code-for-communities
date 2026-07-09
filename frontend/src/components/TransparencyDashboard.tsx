@@ -25,13 +25,13 @@ export function TransparencyDashboard() {
     }))
 
   return (
-    <div className="mx-auto max-w-4xl p-4">
+    <div className="mx-auto max-w-4xl px-4">
       <PageHeader
         title="Constituency Transparency Summary"
         subtitle="Bagalkot — a public accounting of what the platform has tracked so far."
       />
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-x-5 gap-y-5 sm:grid-cols-4">
         <StatTile icon={<MessageSquare size={14} />} label="Citizen reports" value={data.total_submissions.toString()} />
         <StatTile
           icon={<GitMerge size={14} />}
@@ -77,9 +77,9 @@ export function TransparencyDashboard() {
         />
       </div>
 
-      <Card className="mt-6 p-4">
+      <Card className="mt-8 p-4 sm:p-5">
         <div className="mb-3 flex items-center gap-1.5">
-          <h3 className="text-sm font-semibold text-neutral-900 dark:text-neutral-50">Reports by theme</h3>
+          <h3 className="text-sm font-semibold text-stone-900 dark:text-stone-50">Reports by theme</h3>
           <InfoTooltip label="How theme is assigned">
             Each report is machine-classified into one of 7 themes by keyword-occurrence scoring
             against its translated text -- transparent and re-checkable, not a black box.
@@ -88,7 +88,7 @@ export function TransparencyDashboard() {
         <BarChart data={themeData} />
       </Card>
 
-      <p className="mt-4 text-xs text-neutral-400 dark:text-neutral-500">
+      <p className="mt-4 text-xs text-stone-400 dark:text-stone-500">
         All figures are computed live from the same ranking, allocation, and backtest logic used elsewhere in this
         app — this page adds no new scoring, only aggregation.
       </p>

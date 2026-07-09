@@ -6,7 +6,7 @@ import { Loading, ErrorState, PageHeader } from './ui/PageState'
 import { STATUS, scoreStatus } from '../theme'
 
 const BAGALKOT_CENTER: [number, number] = [15.85, 75.7]
-const SILENT_NEED_COLOR = '#4a3aa7' // violet -- distinct from the good/warning/critical status ramp
+const SILENT_NEED_COLOR = '#5b4a8c' // plum -- distinct from the good/warning/critical status ramp
 
 function scoreColor(score: number): string {
   return STATUS[scoreStatus(score)]
@@ -20,21 +20,21 @@ export function MapView() {
   if (error) return <ErrorState label={`Failed to load map data: ${(error as Error).message}`} />
 
   return (
-    <div className="mx-auto max-w-4xl p-4">
-      <div className="mb-3 flex items-center justify-between">
+    <div className="mx-auto max-w-4xl px-4">
+      <div className="mb-3 flex flex-wrap items-end justify-between gap-3">
         <PageHeader title="Constituency Map — Bagalkot" />
-        <label className="flex items-center gap-2 text-sm text-neutral-700 dark:text-neutral-300">
+        <label className="mb-6 flex items-center gap-2 text-sm text-stone-700 dark:text-stone-300">
           <input
             type="checkbox"
             checked={showDivergence}
             onChange={(e) => setShowDivergence(e.target.checked)}
-            className="accent-brand-500"
+            className="accent-accent-700"
           />
           Show need-vs-voice divergence overlay
         </label>
       </div>
 
-      <div className="h-[560px] overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-800">
+      <div className="h-[560px] overflow-hidden rounded-md border border-stone-200 dark:border-stone-800">
         <MapContainer center={BAGALKOT_CENTER} zoom={9} style={{ height: '100%', width: '100%' }}>
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -43,7 +43,7 @@ export function MapView() {
           {data?.constituency && (
             <GeoJSON
               data={data.constituency as GeoJSON.Feature}
-              style={{ color: '#374151', weight: 2, fillOpacity: 0.03 }}
+              style={{ color: '#55503f', weight: 2, fillOpacity: 0.03 }}
             />
           )}
           {data?.villages.features.map((f) => {
@@ -71,7 +71,7 @@ export function MapView() {
                     <div>Priority score: {Math.round(props.composite_score * 100)}</div>
                     {props.gap_percentile != null && <div>Gap percentile: {Math.round(props.gap_percentile * 100)}%</div>}
                     {props.voice_percentile != null && <div>Voice percentile: {Math.round(props.voice_percentile * 100)}%</div>}
-                    {props.silent_need && <div className="font-medium text-violet-700">Silent need village</div>}
+                    {props.silent_need && <div className="font-medium" style={{ color: SILENT_NEED_COLOR }}>Silent need village</div>}
                   </div>
                 </Popup>
               </CircleMarker>
@@ -80,8 +80,8 @@ export function MapView() {
         </MapContainer>
       </div>
 
-      <p className="mt-2 text-xs text-neutral-400 dark:text-neutral-500">{data?.village_coverage_note}</p>
-      <div className="mt-2 flex flex-wrap gap-4 text-xs text-neutral-600 dark:text-neutral-400">
+      <p className="mt-2 text-xs text-stone-400 dark:text-stone-500">{data?.village_coverage_note}</p>
+      <div className="mt-2 flex flex-wrap gap-4 text-xs text-stone-600 dark:text-stone-400">
         <span className="flex items-center gap-1.5">
           <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: STATUS.critical }} /> high priority
         </span>

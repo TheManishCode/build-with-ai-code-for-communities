@@ -24,9 +24,9 @@ export function ExcludedWorkRow({ work, budget }: { work: Work; budget: number |
     <Card className="p-3 text-sm">
       <div className="flex items-center justify-between gap-2">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="font-medium text-neutral-900 dark:text-neutral-100">{work.village_name ?? 'Unresolved'}</span>
+          <span className="font-medium text-stone-900 dark:text-stone-100">{work.village_name ?? 'Unresolved'}</span>
           <ThemeBadge theme={work.theme} />
-          <span className="text-xs text-neutral-400">score {Math.round(work.composite_score * 100)}</span>
+          <span className="text-xs tabular-nums text-stone-400">score {Math.round(work.composite_score * 100)}</span>
         </div>
         <Button variant="secondary" className="shrink-0 px-2.5 py-1 text-xs" onClick={() => setExpanded((v) => !v)}>
           {expanded ? 'Hide' : 'Why not funded?'}
@@ -34,26 +34,26 @@ export function ExcludedWorkRow({ work, budget }: { work: Work; budget: number |
       </div>
 
       {expanded && (
-        <div className="mt-3 border-t border-neutral-100 pt-3 dark:border-neutral-800">
-          {isFetching && <p className="text-xs text-neutral-400">Generating explanation...</p>}
+        <div className="mt-3 border-t border-stone-200 pt-3 dark:border-stone-800">
+          {isFetching && <p className="text-xs text-stone-400">Generating explanation...</p>}
           {data && !data.is_funded && (
             <div className="flex flex-col gap-3">
               <div>
-                <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-neutral-500">MP office explanation</p>
-                <p className="text-neutral-700 dark:text-neutral-300">{data.mp_explanation}</p>
+                <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-stone-500">MP office explanation</p>
+                <p className="text-stone-700 dark:text-stone-300">{data.mp_explanation}</p>
               </div>
               <div>
-                <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-neutral-500">Citizen-facing message</p>
-                <p className="text-neutral-700 dark:text-neutral-300">{data.citizen_message}</p>
+                <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-stone-500">Citizen-facing message</p>
+                <p className="text-stone-700 dark:text-stone-300">{data.citizen_message}</p>
               </div>
-              {data.cutoff_caveat && <p className="text-xs italic text-neutral-400">{data.cutoff_caveat}</p>}
-              <p className="text-xs text-neutral-400">
+              {data.cutoff_caveat && <p className="text-xs italic text-stone-400">{data.cutoff_caveat}</p>}
+              <p className="text-xs text-stone-400">
                 Source: {SOURCE_LABEL[data.generation_source ?? 'template']}
                 {data.fallback_reason ? ` (${data.fallback_reason})` : ''}
               </p>
             </div>
           )}
-          {data && data.is_funded && <p className="text-xs text-neutral-400">This work is actually funded at the current budget.</p>}
+          {data && data.is_funded && <p className="text-xs text-stone-400">This work is actually funded at the current budget.</p>}
         </div>
       )}
     </Card>
