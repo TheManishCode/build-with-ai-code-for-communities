@@ -166,7 +166,7 @@ cd frontend
 npm install
 ```
 
-Create `frontend/.env`:
+Copy `frontend/.env.example` to `frontend/.env` (gitignored -- never commit it):
 
 ```ini
 VITE_API_BASE=http://localhost:8000
@@ -175,6 +175,10 @@ VITE_API_BASE=http://localhost:8000
 ```bash
 npm run dev      # http://localhost:5173
 ```
+
+For production deploys, set `VITE_API_BASE` to the deployed backend's public
+URL in the hosting platform's environment variables (Vite bakes it in at
+build time, so a local `.env` value never belongs in a production build).
 
 ## API reference
 
