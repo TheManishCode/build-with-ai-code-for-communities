@@ -147,8 +147,10 @@ def ingest_road_proposals(db: Session, bagalkot_raw) -> None:
         # PMGSY-III has some exact-duplicate MRL_ID rows -- no natural key exists to dedupe
         # against safely (duplicates may be genuinely distinct road segments sharing an MRL_ID),
         # so they're kept and inserted as separate autoincrement rows.
+        chunk = 500
+        for i in range(0, len(records), chunk):
+            db.execute(insert(PMGSYRoadProposal).values(records[i : i + chunk]))
         if records:
-            db.execute(insert(PMGSYRoadProposal).values(records))
             db.commit()
 
         print(f"[road_proposal:{phase}] read {n_read} -> clipped {n_clipped} -> inserted {len(records)}")
@@ -183,8 +185,12 @@ def ingest_road_drrp(db: Session, bagalkot_raw) -> None:
     ]
 
     db.execute(delete(PMGSYRoadDRRP))
-    if records:
-        db.execute(insert(PMGSYRoadDRRP).values(records))
+    # Chunked rather than one INSERT for all ~7.6k rows -- a single statement carrying
+    # every LineString geometry as inline parameters is large enough that it dropped the
+    # SSL connection to a remote (high-latency) Postgres host mid-transfer.
+    chunk = 500
+    for i in range(0, len(records), chunk):
+        db.execute(insert(PMGSYRoadDRRP).values(records[i : i + chunk]))
     db.commit()
 
     print(f"[road_drrp] read (post-bbox) {n_read} -> clipped {n_clipped} -> inserted {len(records)}")
