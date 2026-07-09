@@ -1,18 +1,23 @@
 import { useQuery } from '@tanstack/react-query'
 import { useState, useEffect, useRef } from 'react'
+import { motion } from 'framer-motion'
+import { X, Copy, Download, Check } from 'lucide-react'
 import { api } from '../api/client'
+import { Spinner } from './ui/StateDisplays'
 
 export function DraftLetterModal({ workId, onClose }: { workId: string; onClose: () => void }) {
-  const { data, isLoading, error } = useQuery({ queryKey: ['letter', workId], queryFn: () => api.draftLetter(workId) })
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['letter', workId],
+    queryFn: () => api.draftLetter(workId),
+  })
   const [body, setBody] = useState('')
+  const [copied, setCopied] = useState(false)
   const closeButtonRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
     if (data) setBody(data.body)
   }, [data])
 
-  // Accessibility: focus the close button on open, close on Escape (WCAG 2.1.2 -- a modal
-  // must not trap keyboard/focus users without an escape route).
   useEffect(() => {
     closeButtonRef.current?.focus()
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -22,8 +27,10 @@ export function DraftLetterModal({ workId, onClose }: { workId: string; onClose:
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [onClose])
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(body)
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(body)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
   }
 
   const handleDownload = () => {
@@ -37,43 +44,83 @@ export function DraftLetterModal({ workId, onClose }: { workId: string; onClose:
   }
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+    <motion.div
+      className="modal-backdrop"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
       onClick={onClose}
       role="presentation"
     >
-      <div
-        className="max-h-[85vh] w-full max-w-2xl overflow-y-auto rounded-lg bg-white p-6 shadow-xl dark:bg-gray-800"
+      <motion.div
+        className="modal-content"
+        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 20 }}
+        transition={{ type: 'spring', stiffness: 300, damping: 25 }}
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
         aria-labelledby="draft-letter-title"
       >
-        <div className="mb-4 flex items-center justify-between">
-          <h3 id="draft-letter-title" className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginBottom: 'var(--space-5)',
+        }}>
+          <h3
+            id="draft-letter-title"
+            style={{
+              fontSize: 'var(--text-lg)',
+              fontWeight: 700,
+              color: 'var(--color-text-primary)',
+            }}
+          >
             Draft Letter
           </h3>
           <button
             ref={closeButtonRef}
             onClick={onClose}
             aria-label="Close draft letter dialog"
-            className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+            className="btn btn-ghost btn-sm"
           >
-            <span aria-hidden="true">✕</span>
+            <X size={18} />
           </button>
         </div>
 
-        {isLoading && <div className="text-gray-500">Generating letter...</div>}
-        {error && <div className="text-red-600">Failed to generate letter: {(error as Error).message}</div>}
+        {isLoading && (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'var(--space-10)' }}>
+            <Spinner size={28} />
+          </div>
+        )}
+
+        {error && (
+          <div className="error-banner">
+            Failed to generate letter: {(error as Error).message}
+          </div>
+        )}
 
         {data && (
           <>
-            <div className="mb-2 text-sm text-gray-600 dark:text-gray-400">
-              <span className="font-medium">To:</span> {data.to}
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 'var(--space-2)',
+              marginBottom: 'var(--space-4)',
+              fontSize: 'var(--text-sm)',
+              color: 'var(--color-text-secondary)',
+            }}>
+              <div>
+                <span style={{ fontWeight: 600, color: 'var(--color-text-tertiary)' }}>To: </span>
+                {data.to}
+              </div>
+              <div>
+                <span style={{ fontWeight: 600, color: 'var(--color-text-tertiary)' }}>Subject: </span>
+                {data.subject}
+              </div>
             </div>
-            <div className="mb-3 text-sm text-gray-600 dark:text-gray-400">
-              <span className="font-medium">Subject:</span> {data.subject}
-            </div>
+
             <label htmlFor="draft-letter-body" className="sr-only">
               Draft letter body (editable)
             </label>
@@ -81,27 +128,41 @@ export function DraftLetterModal({ workId, onClose }: { workId: string; onClose:
               id="draft-letter-body"
               value={body}
               onChange={(e) => setBody(e.target.value)}
-              rows={20}
-              className="w-full rounded-md border border-gray-300 p-3 font-mono text-sm leading-relaxed dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
+              rows={16}
+              className="input"
+              style={{
+                fontFamily: 'var(--font-mono)',
+                fontSize: 'var(--text-xs)',
+                lineHeight: 'var(--leading-relaxed)',
+                resize: 'vertical',
+                minHeight: 200,
+              }}
             />
-            <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">Editable before sending -- edit freely, this is a draft.</p>
-            <div className="mt-4 flex gap-2">
-              <button
-                onClick={handleCopy}
-                className="rounded-md bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-800 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-100"
-              >
-                Copy to clipboard
+            <p style={{
+              marginTop: 'var(--space-2)',
+              fontSize: 'var(--text-xs)',
+              color: 'var(--color-text-muted)',
+            }}>
+              Editable before sending — edit freely, this is a draft.
+            </p>
+
+            <div style={{
+              display: 'flex',
+              gap: 'var(--space-3)',
+              marginTop: 'var(--space-5)',
+            }}>
+              <button onClick={handleCopy} className="btn btn-secondary btn-sm">
+                {copied ? <Check size={14} /> : <Copy size={14} />}
+                {copied ? 'Copied!' : 'Copy to clipboard'}
               </button>
-              <button
-                onClick={handleDownload}
-                className="rounded-md bg-gray-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-gray-700 dark:bg-gray-100 dark:text-gray-900"
-              >
+              <button onClick={handleDownload} className="btn btn-primary btn-sm">
+                <Download size={14} />
                 Download as .txt
               </button>
             </div>
           </>
         )}
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   )
 }

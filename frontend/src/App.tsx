@@ -1,61 +1,49 @@
 import { useState } from 'react'
-import { MapView } from './components/MapView'
-import { WorksList } from './components/WorksList'
-import { BudgetSimulator } from './components/BudgetSimulator'
-import { BacktestPanel } from './components/BacktestPanel'
-import { CitizenStatusLookup } from './components/CitizenStatusLookup'
-import { TransparencyDashboard } from './components/TransparencyDashboard'
-
-type Tab = 'map' | 'works' | 'budget' | 'backtest' | 'status' | 'transparency'
-
-const TABS: { id: Tab; label: string }[] = [
-  { id: 'works', label: 'Ranked Priorities' },
-  { id: 'map', label: 'Map' },
-  { id: 'budget', label: 'Budget Simulator' },
-  { id: 'backtest', label: 'Backtest' },
-  { id: 'status', label: 'Check My Report' },
-  { id: 'transparency', label: 'Transparency' },
-]
+import { Routes, Route, Navigate } from 'react-router-dom'
+import { Sidebar } from './components/layout/Sidebar'
+import { MobileHeader } from './components/layout/MobileHeader'
+import { DashboardPage } from './pages/DashboardPage'
+import { PrioritiesPage } from './pages/PrioritiesPage'
+import { MapPage } from './pages/MapPage'
+import { BudgetPage } from './pages/BudgetPage'
+import { BacktestPage } from './pages/BacktestPage'
+import { StatusPage } from './pages/StatusPage'
+import { TransparencyPage } from './pages/TransparencyPage'
+import { ReportPage } from './pages/ReportPage'
 
 function App() {
-  const [tab, setTab] = useState<Tab>('works')
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <header className="border-b border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
-        <div className="mx-auto max-w-5xl px-4 py-4">
-          <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">People's Priorities</h1>
-          <p className="text-sm text-gray-500">Bagalkot constituency — data-driven development priorities</p>
-        </div>
-        <nav className="mx-auto flex max-w-5xl gap-1 px-4" role="tablist" aria-label="Sections">
-          {TABS.map((t) => (
-            <button
-              key={t.id}
-              role="tab"
-              id={`tab-${t.id}`}
-              aria-selected={tab === t.id}
-              aria-controls={`panel-${t.id}`}
-              onClick={() => setTab(t.id)}
-              className={`rounded-t-md px-4 py-2 text-sm font-medium ${
-                tab === t.id
-                  ? 'border-b-2 border-gray-900 text-gray-900 dark:border-gray-100 dark:text-gray-100'
-                  : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
-              }`}
-            >
-              {t.label}
-            </button>
-          ))}
-        </nav>
-      </header>
+    <div className="app-shell">
+      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      
+      {/* Mobile overlay */}
+      <div
+        className={`mobile-overlay ${sidebarOpen ? 'open' : ''}`}
+        onClick={() => setSidebarOpen(false)}
+        role="presentation"
+      />
 
-      <main id={`panel-${tab}`} role="tabpanel" aria-labelledby={`tab-${tab}`}>
-        {tab === 'works' && <WorksList />}
-        {tab === 'map' && <MapView />}
-        {tab === 'budget' && <BudgetSimulator />}
-        {tab === 'backtest' && <BacktestPanel />}
-        {tab === 'status' && <CitizenStatusLookup />}
-        {tab === 'transparency' && <TransparencyDashboard />}
-      </main>
+      <div className="app-main">
+        <MobileHeader onMenuToggle={() => setSidebarOpen((v) => !v)} />
+
+        <main className="app-content">
+          <div className="content-container">
+            <Routes>
+              <Route path="/" element={<DashboardPage />} />
+              <Route path="/report" element={<ReportPage />} />
+              <Route path="/priorities" element={<PrioritiesPage />} />
+              <Route path="/map" element={<MapPage />} />
+              <Route path="/budget" element={<BudgetPage />} />
+              <Route path="/backtest" element={<BacktestPage />} />
+              <Route path="/status" element={<StatusPage />} />
+              <Route path="/transparency" element={<TransparencyPage />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </div>
+        </main>
+      </div>
     </div>
   )
 }
